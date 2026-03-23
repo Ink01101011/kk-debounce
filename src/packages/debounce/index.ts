@@ -1,6 +1,7 @@
 import { convertTemporalToMs } from '../../utils';
 import type {
   AnyFunction,
+  DebouncedFunction,
   DebounceOptions,
   DebounceTemporalObjectType,
 } from '../types';
@@ -22,7 +23,7 @@ export function debounce<T extends AnyFunction>(
   func: T,
   wait: number | DebounceTemporalObjectType,
   options: DebounceOptions = {}
-) {
+): DebouncedFunction<T> {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let controller: AbortController | null = null;
 
