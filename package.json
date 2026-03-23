@@ -28,10 +28,6 @@
   "engines": {
     "node": ">=18"
   },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
-  },
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "build": "tsup",

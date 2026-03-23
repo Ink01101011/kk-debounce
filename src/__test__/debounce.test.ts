@@ -60,4 +60,16 @@ describe('debounce', () => {
     expect(abortSpy).toHaveBeenCalledTimes(1);
     expect(abortSpy).toHaveBeenCalledWith('Debounced: New call initiated');
   });
+
+  it('does not execute when external signal is aborted before delay', () => {
+    const fn = vi.fn();
+    const externalController = new AbortController();
+    const debounced = debounce(fn, 100, { signal: externalController.signal });
+
+    debounced('payload');
+    externalController.abort('external cancel');
+
+    vi.advanceTimersByTime(100);
+    expect(fn).not.toHaveBeenCalled();
+  });
 });

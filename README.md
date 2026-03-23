@@ -1,73 +1,51 @@
-# ⏳ kk-debounce
+# kk-debounce
 
-**The Next-Generation Debounce Library for 2026.** Built for the modern web with native **Temporal API** support, **AbortSignal** integration, and **Fine-grained Reactivity**.
+Type-safe debounce utilities for modern JavaScript and TypeScript applications.
 
 [![npm version](https://img.shields.io/npm/v/kk-debounce.svg)](https://www.npmjs.com/package/kk-debounce)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/kk-debounce)](https://bundlephobia.com/result?p=kk-debounce)
 [![CI](https://github.com/Ink01101011/kk-debounce/actions/workflows/ci.yml/badge.svg)](https://github.com/Ink01101011/kk-debounce/actions/workflows/ci.yml)
 
----
+## Highlights
 
-## 🚀 Why kk-debounce?
+- Temporal-style duration objects (`{ hours, minutes, seconds, ms }`).
+- Built-in cancellation support via `AbortSignal`.
+- `createDebouncedSignal` helper for reactive state workflows.
+- ESM + CJS outputs with tree-shakeable packaging.
 
-Traditional debounce libraries belong to the past. **kk-debounce** is designed to solve today's async and reactivity challenges with a minimal, tree-shakable API.
+## Comparison with Popular Alternatives
 
-### 1. Temporal API Support (Type-Safe Durations)
+| Feature                                     | kk-debounce |      lodash.debounce      |        underscore         |       just-debounce-it        |
+| :------------------------------------------ | :---------: | :-----------------------: | :-----------------------: | :---------------------------: |
+| Numeric delay (ms)                          |     ✅      |            ✅             |            ✅             |              ✅               |
+| Readable duration object (`{ minutes: 1 }`) |     ✅      |            ❌             |            ❌             |              ❌               |
+| `AbortSignal` integration                   |     ✅      |            ❌             |            ❌             |              ❌               |
+| Reactive helper (`createDebouncedSignal`)   |     ✅      |            ❌             |            ❌             |              ❌               |
+| Type declarations bundled                   |     ✅      | ❌ (via `@types` package) | ❌ (via `@types` package) | ❌ (depends on version/setup) |
+| ESM + CJS output                            |     ✅      |            ✅             |            ✅             |              ✅               |
 
-Stop guessing milliseconds. Use human-readable durations.
+This table is intended for migration planning and feature fit, not benchmark results.
 
-```typescript
-import { debounce } from 'kk-debounce';
-
-// Old way: debounce(fn, 5400000) -> What is this?
-// Modern way:
-const save = debounce(saveData, { hours: 1, minutes: 30 });
-```
-
-### 2. Built-in AbortSignal (No more Zombies)
-
-Prevent stale scheduled work by cancelling previous debounce cycles when a new call arrives.
-
-```typescript
-const search = debounce(
-  async (query) => {
-    const response = await fetch(`/api?q=${encodeURIComponent(query)}`);
-    return response.json();
-  },
-  500,
-  { autoAbort: true }
-);
-```
-
-### 3. Signal-Ready (Reactivity Guard)
-
-Perfect for React 19, Svelte 5, and SolidJS. Prevent "Reactivity Snowballs" with `isPending` state.
-
-```typescript
-const debounced = createDebouncedSignal(
-  () => state.value,
-  (v) => (state.value = v),
-  { ms: 300 }
-);
-
-console.log(debounced.isPending); // Track loading states easily
-```
-
----
-
-## 📦 Installation
+## Installation
 
 ```bash
 pnpm add kk-debounce
-# or
+```
+
+Alternative package managers:
+
+```bash
 npm install kk-debounce
-# or
 yarn add kk-debounce
 ```
 
-## ⚡ Quick Start
+## Requirements
 
-```typescript
+- Node.js >= 18
+
+## Quick Start
+
+```ts
 import { debounce, createDebouncedSignal } from 'kk-debounce';
 
 const saveDraft = debounce(
@@ -88,29 +66,108 @@ saveDraft('hello');
 textSignal('world');
 ```
 
-## 📖 API Reference
+## API
 
-### `debounce(func, wait, options)`
+### debounce(func, wait, options?)
 
-Standard debounce with superpowers.
+Creates a debounced function that delays execution until `wait` has elapsed since the last call.
 
-- `wait`: `number | DebounceTemporalObjectType`
-- `options.autoAbort`: `boolean` (Aborts previous controller on new calls)
-- `options.signal`: `AbortSignal` (External signal to link)
+Parameters:
 
-### `createDebouncedSignal(getter, setter, wait, options)`
+- `func`: callback to debounce.
+- `wait`: `number | DebounceTemporalObjectType`.
+- `options.autoAbort?`: when `true`, aborts previous internal controller on new calls.
+- `options.signal?`: external `AbortSignal` to link cancellation.
 
-Reactive state debounce.
+Returns:
 
-- Returns an object with `.value`, `.isPending`, `.cancel()`, and `.flush()`.
+- Debounced callable with `cancel(): void`.
 
----
+### createDebouncedSignal(getter, setter, wait, options?)
 
-## 🧪 Example Use Cases
+Creates a debounced state controller for reactive flows.
 
-### Search Box (debounce + autoAbort)
+Returns an object/function with:
 
-```typescript
+- `value`: latest pending or committed value.
+- `isPending`: whether an update is waiting.
+- `cancel()`: cancel pending update.
+- `flush()`: immediately apply pending value.
+
+## Migration from lodash.debounce
+
+Use these patterns to migrate incrementally with minimal refactor risk.
+
+### 1) Basic debounce
+
+```ts
+// lodash.debounce
+import debounce from 'lodash.debounce';
+
+const onResize = debounce(() => {
+  console.log('resize');
+}, 250);
+```
+
+```ts
+// kk-debounce
+import { debounce } from 'kk-debounce';
+
+const onResize = debounce(() => {
+  console.log('resize');
+}, 250);
+```
+
+### 2) Replace magic milliseconds with readable duration objects
+
+```ts
+// lodash.debounce
+const saveDraft = debounce(save, 90000);
+```
+
+```ts
+// kk-debounce
+const saveDraft = debounce(save, { minutes: 1, seconds: 30 });
+```
+
+### 3) Cancel behavior parity
+
+Both libraries expose `.cancel()` on the returned debounced function.
+
+```ts
+const job = debounce(runTask, 300);
+job();
+job.cancel();
+```
+
+### 4) Optional upgrades during migration
+
+- Enable `autoAbort` to cancel previous pending cycles on rapid calls.
+- Link external cancellation with `options.signal`.
+- Move state-heavy input flows to `createDebouncedSignal` for pending-state visibility.
+
+### 5) Common import update checklist
+
+- Replace `import debounce from 'lodash.debounce'` with `import { debounce } from 'kk-debounce'`.
+- Remove `lodash.debounce` from dependencies after migration is complete.
+- Run tests to confirm call timing assumptions in critical paths.
+
+### Migration Cost by Library
+
+| From library             | Migration cost | Why                                                                                                                                                             |
+| :----------------------- | :------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lodash.debounce`        |      Low       | API shape is very similar for basic usage. Most changes are import replacement plus optional duration-object adoption.                                          |
+| `underscore`             |     Medium     | Similar debounce behavior, but projects often have mixed underscore utility usage and older module patterns that need cleanup during migration.                 |
+| `just-debounce-it`       |     Medium     | Core debounce usage is simple to migrate, but teams usually need to add missing capabilities (`AbortSignal`, reactive helper, richer typing) in adoption phase. |
+| Custom in-house debounce |      High      | Behavior differences (leading/trailing semantics, cancellation contracts, edge cases) require explicit test verification before rollout.                        |
+
+Cost criteria: estimated by API delta, refactor scope, and risk of behavioral regression in existing call paths.
+
+## Usage Examples
+
+### Search Input
+
+```ts
 import { debounce } from 'kk-debounce';
 
 const search = debounce(
@@ -128,65 +185,44 @@ search('react');
 search('react 19');
 ```
 
-### Reactive Form Input (createDebouncedSignal)
+### Reactive State
 
-```typescript
+```ts
 import { createDebouncedSignal } from 'kk-debounce';
 
-let internalSearchState = '';
+let state = '';
 
-const fakeApi = {
-  search(query: string) {
-    console.log('Searching:', query);
-  },
-};
-
-const searchAction = createDebouncedSignal(
-  () => internalSearchState,
-  (val) => {
-    internalSearchState = val;
-    fakeApi.search(val);
+const signal = createDebouncedSignal(
+  () => state,
+  (value) => {
+    state = value;
   },
   { seconds: 1 }
 );
 
-searchAction('กะเพรา');
+signal('next value');
 
-if (searchAction.isPending) {
-  console.log('Waiting for user to stop typing...');
+if (signal.isPending) {
+  console.log('Waiting...');
 }
 
-searchAction.flush();
+signal.flush();
 ```
 
-### More Example Files
+Additional examples:
 
-- See `src/example/debounce.example.ts`
-- See `src/example/createDebounceSignal.example.ts`
+- `src/example/debounce.example.ts`
+- `src/example/createDebounceSignal.example.ts`
 
----
+## Compatibility
 
-## ℹ️ Consumer Notes
+- JavaScript: supported (ESM and CommonJS).
+- TypeScript: supported with bundled declarations.
 
-- `autoAbort` cancels previous debounce cycles before execution.
-- `options.signal` allows linking an external AbortSignal to cancel pending execution.
-- The package is tree-shakable (`sideEffects: false`) and ships both ESM and CJS builds.
-- Looking for dev workflow, test, release, and security process? See `DEVELOP.md`.
+## Development
 
----
+For maintainers and release process, see `DEVELOP.md`.
 
-## 🛠️ Comparison
+## License
 
-| Feature                  | Lodash | kk-debounce |
-| :----------------------- | :----: | :---------: |
-| Temporal Duration        |   ❌   |     ✅      |
-| Native AbortSignal       |   ❌   |     ✅      |
-| Auto-Abort Async         |   ❌   |     ✅      |
-| Reactivity Pending State |   ❌   |     ✅      |
-| Tree-shakable / < 1kb    |   ⚠️   |     ✅      |
-
----
-
-## 📜 License
-
-MIT © YourName
+MIT
