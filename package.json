@@ -1,6 +1,6 @@
 {
   "name": "kk-debounce",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The Next-Generation Debounce Library for 2026. Built for the modern web with native Temporal API support, AbortSignal integration, and Fine-grained Reactivity.",
   "type": "module",
   "sideEffects": false,
