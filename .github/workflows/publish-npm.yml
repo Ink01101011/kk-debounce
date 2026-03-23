@@ -35,17 +35,6 @@ jobs:
       - name: Verify package quality gate
         run: pnpm run check:all
 
-      - name: Validate npm authentication
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          if [ -z "${NODE_AUTH_TOKEN}" ]; then
-            echo "NPM_TOKEN secret is not set. Add it in: Settings > Secrets and variables > Actions."
-            exit 1
-          fi
-          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
-          npm whoami
-
       - name: Prevent duplicate version publish
         run: |
           PKG_NAME=$(node -p "require('./package.json').name")
@@ -57,6 +46,4 @@ jobs:
           echo "Version ${PKG_VERSION} is not published yet."
 
       - name: Publish to npm
-        run: pnpm publish --access public --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: pnpm publish --provenance --access public --no-git-checks
