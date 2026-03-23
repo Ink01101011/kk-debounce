@@ -14,19 +14,21 @@ Developer guide for kk-debounce maintainers.
 - src/packages/createDebounceSignal: reactive debounce helper.
 - src/packages/types: public type contracts.
 - src/utils: shared helper functions.
-- src/__test__: unit tests.
+- src/**test**: unit tests.
 - src/example: runnable examples and usage references.
 
 ## Commands
 
-- Install: npm install
-- Test (CI): npm test
-- Test (watch): npm run test:watch
-- Typecheck: npm run typecheck
-- Build: npm run build
-- CVE check (prod deps): npm run check:cve
-- CVE check (all deps): npm run check:cve:full
-- Full release gate: npm run check:all
+- Install: pnpm install
+- Lint: pnpm run lint
+- Format check: pnpm run format
+- Test (CI): pnpm test
+- Test (watch): pnpm run test:watch
+- Typecheck: pnpm run typecheck
+- Build: pnpm run build
+- CVE check (prod deps): pnpm run check:cve
+- CVE check (all deps): pnpm run check:cve:full
+- Full release gate: pnpm run check:all
 
 ## Development Techniques
 
@@ -39,7 +41,7 @@ Developer guide for kk-debounce maintainers.
 ## Husky
 
 - Hook file: .husky/pre-commit
-- Current gate: npm run check:all
+- Current gate: pnpm run check:all
 - Purpose: block commits that fail typecheck, tests, build, or CVE scan.
 
 ## Tree-Shaking and Bundle Size
@@ -57,7 +59,7 @@ Developer guide for kk-debounce maintainers.
 
 ## Release Workflow
 
-1. npm run check:all
+1. pnpm run check:all
 2. Confirm README consumer docs are up to date.
 3. Confirm example files compile logically with latest API.
-4. Publish package: npm publish --access public
+4. Publish package: pnpm publish --provenance --access public

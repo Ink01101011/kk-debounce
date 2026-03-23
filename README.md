@@ -4,6 +4,7 @@
 
 [![npm version](https://img.shields.io/npm/v/kk-debounce.svg)](https://www.npmjs.com/package/kk-debounce)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/kk-debounce)](https://bundlephobia.com/result?p=kk-debounce)
+[![CI](https://github.com/Ink01101011/kk-debounce/actions/workflows/ci.yml/badge.svg)](https://github.com/Ink01101011/kk-debounce/actions/workflows/ci.yml)
 
 ---
 
@@ -12,7 +13,9 @@
 Traditional debounce libraries belong to the past. **kk-debounce** is designed to solve today's async and reactivity challenges with a minimal, tree-shakable API.
 
 ### 1. Temporal API Support (Type-Safe Durations)
+
 Stop guessing milliseconds. Use human-readable durations.
+
 ```typescript
 import { debounce } from 'kk-debounce';
 
@@ -22,16 +25,24 @@ const save = debounce(saveData, { hours: 1, minutes: 30 });
 ```
 
 ### 2. Built-in AbortSignal (No more Zombies)
+
 Prevent stale scheduled work by cancelling previous debounce cycles when a new call arrives.
+
 ```typescript
-const search = debounce(async (query) => {
-  const response = await fetch(`/api?q=${encodeURIComponent(query)}`);
-  return response.json();
-}, 500, { autoAbort: true });
+const search = debounce(
+  async (query) => {
+    const response = await fetch(`/api?q=${encodeURIComponent(query)}`);
+    return response.json();
+  },
+  500,
+  { autoAbort: true }
+);
 ```
 
 ### 3. Signal-Ready (Reactivity Guard)
+
 Perfect for React 19, Svelte 5, and SolidJS. Prevent "Reactivity Snowballs" with `isPending` state.
+
 ```typescript
 const debounced = createDebouncedSignal(
   () => state.value,
@@ -47,6 +58,8 @@ console.log(debounced.isPending); // Track loading states easily
 ## 📦 Installation
 
 ```bash
+pnpm add kk-debounce
+# or
 npm install kk-debounce
 # or
 yarn add kk-debounce
@@ -65,7 +78,9 @@ const saveDraft = debounce(
 let text = '';
 const textSignal = createDebouncedSignal(
   () => text,
-  (next) => { text = next; },
+  (next) => {
+    text = next;
+  },
   { ms: 300 }
 );
 
@@ -76,13 +91,17 @@ textSignal('world');
 ## 📖 API Reference
 
 ### `debounce(func, wait, options)`
+
 Standard debounce with superpowers.
+
 - `wait`: `number | DebounceTemporalObjectType`
 - `options.autoAbort`: `boolean` (Aborts previous controller on new calls)
 - `options.signal`: `AbortSignal` (External signal to link)
 
 ### `createDebouncedSignal(getter, setter, wait, options)`
+
 Reactive state debounce.
+
 - Returns an object with `.value`, `.isPending`, `.cancel()`, and `.flush()`.
 
 ---
@@ -101,7 +120,7 @@ const search = debounce(
     console.log('Latest result:', result);
   },
   { ms: 500 },
-  { autoAbort: true },
+  { autoAbort: true }
 );
 
 search('rea');
@@ -128,7 +147,7 @@ const searchAction = createDebouncedSignal(
     internalSearchState = val;
     fakeApi.search(val);
   },
-  { seconds: 1 },
+  { seconds: 1 }
 );
 
 searchAction('กะเพรา');
@@ -158,15 +177,16 @@ searchAction.flush();
 
 ## 🛠️ Comparison
 
-| Feature | Lodash | kk-debounce |
-| :--- | :---: | :---: |
-| Temporal Duration | ❌ | ✅ |
-| Native AbortSignal | ❌ | ✅ |
-| Auto-Abort Async | ❌ | ✅ |
-| Reactivity Pending State | ❌ | ✅ |
-| Tree-shakable / < 1kb | ⚠️ | ✅ |
+| Feature                  | Lodash | kk-debounce |
+| :----------------------- | :----: | :---------: |
+| Temporal Duration        |   ❌   |     ✅      |
+| Native AbortSignal       |   ❌   |     ✅      |
+| Auto-Abort Async         |   ❌   |     ✅      |
+| Reactivity Pending State |   ❌   |     ✅      |
+| Tree-shakable / < 1kb    |   ⚠️   |     ✅      |
 
 ---
 
 ## 📜 License
+
 MIT © YourName

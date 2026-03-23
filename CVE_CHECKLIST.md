@@ -4,8 +4,8 @@ Run this checklist before each release.
 
 ## 1) Automated checks
 
-- `npm run check:cve`
-- `npm run check:cve:full`
+- `pnpm run check:cve`
+- `pnpm run check:cve:full`
 
 ## 2) Review findings
 
@@ -15,10 +15,10 @@ Run this checklist before each release.
 
 ## 3) Verify lockfile integrity
 
-- Ensure `package-lock.json` is committed.
-- Re-run `npm ci` on CI and run CVE checks again.
+- Ensure `pnpm-lock.yaml` is committed.
+- Re-run `pnpm install --frozen-lockfile` on CI and run CVE checks again.
 
 ## 4) Release gate
 
 - Do not publish if `high` or `critical` vulnerabilities are unresolved.
-- Re-run `npm run check:all` before `npm publish`.
+- Re-run `pnpm run check:all` before `pnpm publish`.
