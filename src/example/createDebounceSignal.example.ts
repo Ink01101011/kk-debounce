@@ -1,10 +1,10 @@
-import { createDebouncedSignal } from "../packages/createDebounceSignal";
+import { createDebouncedSignal } from '../packages/createDebounceSignal';
 
-let internalSearchState = "";
+let internalSearchState = '';
 
 const fakeApi = {
   search(query: string) {
-    console.log("Searching:", query);
+    console.log('Searching:', query);
   },
 };
 
@@ -18,11 +18,11 @@ const searchAction = createDebouncedSignal(
 );
 
 // User types
-searchAction("กะเพรา");
+searchAction('กะเพรา');
 
 // UI can read pending state
 if (searchAction.isPending) {
-  console.log("กำลังรอหยุดพิมพ์เพื่อค้นหา...");
+  console.log('กำลังรอหยุดพิมพ์เพื่อค้นหา...');
 }
 
 // User presses Enter -> force immediate update

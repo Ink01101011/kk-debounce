@@ -1,7 +1,7 @@
-import type { DebounceTemporalObjectType } from "../packages/types";
+import type { DebounceTemporalObjectType } from '../packages/types';
 
 export function convertTemporalToMs(
-  temporal: DebounceTemporalObjectType,
+  temporal: DebounceTemporalObjectType
 ): number {
   return (
     (temporal.hours ?? 0) * 3600000 +

@@ -1,9 +1,9 @@
-import { convertTemporalToMs } from "../../utils";
+import { convertTemporalToMs } from '../../utils';
 import type {
   AnyFunction,
   DebounceOptions,
   DebounceTemporalObjectType,
-} from "../types";
+} from '../types';
 
 /**
  * Creates a debounced version of the provided function that delays execution
@@ -21,19 +21,19 @@ import type {
 export function debounce<T extends AnyFunction>(
   func: T,
   wait: number | DebounceTemporalObjectType,
-  options: DebounceOptions = {},
+  options: DebounceOptions = {}
 ) {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let controller: AbortController | null = null;
 
-  const delay = typeof wait === "number" ? wait : convertTemporalToMs(wait);
+  const delay = typeof wait === 'number' ? wait : convertTemporalToMs(wait);
 
   const debouncedFunction = function (
     this: ThisParameterType<T>,
     ...args: Parameters<T>
   ): void {
     if (options.autoAbort && controller) {
-      controller.abort("Debounced: New call initiated");
+      controller.abort('Debounced: New call initiated');
     }
 
     if (timeoutId) {
@@ -44,7 +44,7 @@ export function debounce<T extends AnyFunction>(
 
     const internalSignal = controller.signal;
     const combinedSignal =
-      options.signal && "any" in AbortSignal
+      options.signal && 'any' in AbortSignal
         ? AbortSignal.any([options.signal, internalSignal])
         : internalSignal;
 
@@ -63,7 +63,7 @@ export function debounce<T extends AnyFunction>(
 
   debouncedFunction.cancel = () => {
     if (timeoutId) clearTimeout(timeoutId);
-    if (controller) controller.abort("Debounced: Manually cancelled");
+    if (controller) controller.abort('Debounced: Manually cancelled');
     timeoutId = null;
     controller = null;
   };

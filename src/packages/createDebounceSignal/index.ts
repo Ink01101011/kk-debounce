@@ -1,9 +1,9 @@
-import { debounce } from "../debounce";
+import { debounce } from '../debounce';
 import type {
   DebouncedSignal,
   DebounceOptions,
   DebounceTemporalObjectType,
-} from "../types";
+} from '../types';
 
 /**
  * Creates a reactive controller that debounces state updates.
@@ -29,7 +29,7 @@ export function createDebouncedSignal<T>(
   getter: () => T,
   setter: (val: T) => void,
   wait: number | DebounceTemporalObjectType,
-  options: DebounceOptions = {},
+  options: DebounceOptions = {}
 ): DebouncedSignal<T> {
   let _isPending = false;
   let _pendingValue: T = getter();
@@ -40,7 +40,7 @@ export function createDebouncedSignal<T>(
       _isPending = false;
     },
     wait,
-    options,
+    options
   );
 
   const debouncedSignal = function (nextValue: T) {
