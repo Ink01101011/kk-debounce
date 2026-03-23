@@ -17,9 +17,4 @@ describe('convertTemporalToMs', () => {
     expect(convertTemporalToMs({ seconds: 2 })).toBe(2000);
     expect(convertTemporalToMs({})).toBe(0);
   });
-
-  it('handles partial values', () => {
-    expect(convertTemporalToMs({ seconds: 2 })).toBe(2000);
-    expect(convertTemporalToMs({})).toBe(0);
-  });
 });
