@@ -6,6 +6,7 @@ afterEach(() => {
   vi.unmock('react');
   vi.unmock('../debounce');
   vi.unmock('../debounceSignal');
+  vi.unmock('../throttle');
 });
 
 describe('package exports', () => {
@@ -21,6 +22,13 @@ describe('package exports', () => {
     const useDebounceModule = await import('../react/useDebounce');
 
     expect(reactPkg.useDebounce).toBe(useDebounceModule.default);
+  });
+
+  it('re-exports useThrottled from react index', async () => {
+    const reactPkg = await import('../react');
+    const useThrottledModule = await import('../react/useThrottled');
+
+    expect(reactPkg.useThrottled).toBe(useThrottledModule.default);
   });
 });
 
@@ -122,5 +130,35 @@ describe('react hooks internals', () => {
 
     cleanups.forEach((cleanup) => cleanup());
     expect(cancel).toHaveBeenCalledTimes(1);
+  });
+
+  it('useThrottled wires callback through ref-backed wrapper', async () => {
+    vi.doMock('react', () => {
+      const reactMock = {
+        useRef: <T>(value: T) => ({ current: value }),
+        useEffect: (effect: () => void | (() => void)) => {
+          effect();
+        },
+        useMemo: <T>(factory: () => T) => factory(),
+      };
+
+      return { default: reactMock };
+    });
+
+    const throttleImpl = vi.fn((cb: (...args: unknown[]) => unknown) => cb);
+
+    vi.doMock('../throttle', () => ({
+      throttle: throttleImpl,
+    }));
+
+    const { default: useThrottled } = await import('../react/useThrottled');
+    const callback = vi.fn((value: string) => value.length);
+
+    const throttled = useThrottled(callback, 80);
+    throttled('abc');
+
+    expect(throttleImpl).toHaveBeenCalledTimes(1);
+    expect(throttleImpl).toHaveBeenCalledWith(expect.any(Function), 80);
+    expect(callback).toHaveBeenCalledWith('abc');
   });
 });
