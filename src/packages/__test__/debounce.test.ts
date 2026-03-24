@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { debounce } from '../packages/debounce';
+import { debounce } from '../debounce';
 
 describe('debounce', () => {
   beforeEach(() => {
@@ -71,5 +71,29 @@ describe('debounce', () => {
 
     vi.advanceTimersByTime(100);
     expect(fn).not.toHaveBeenCalled();
+  });
+
+  it('falls back to internal signal when AbortSignal.any is unavailable', () => {
+    const fn = vi.fn();
+    const originalAny = AbortSignal.any;
+
+    try {
+      delete (AbortSignal as { any?: unknown }).any;
+
+      const externalController = new AbortController();
+      const debounced = debounce(fn, 50, { signal: externalController.signal });
+
+      debounced('still-runs');
+      externalController.abort('external cancel');
+      vi.advanceTimersByTime(50);
+
+      expect(fn).toHaveBeenCalledTimes(1);
+      expect(fn).toHaveBeenCalledWith('still-runs');
+    } finally {
+      Object.defineProperty(AbortSignal, 'any', {
+        configurable: true,
+        value: originalAny,
+      });
+    }
   });
 });

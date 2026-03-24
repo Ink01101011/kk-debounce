@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { convertTemporalToMs } from '../utils';
+import { convertTemporalToMs } from '../../utils';
 
 describe('convertTemporalToMs', () => {
   it('converts all supported units', () => {

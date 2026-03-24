@@ -33,7 +33,7 @@ export default tseslint.config(
       '**/*.mjs',
       '**/*.cjs',
       'scripts/**',
-      'examples/**',
+      'src/example/**',
       '**/__tests__/**',
       '**/*.test.ts',
       '**/*.spec.ts',

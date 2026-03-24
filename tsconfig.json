@@ -13,5 +13,5 @@
     "outDir": "./dist"
   },
   "include": ["src/packages", "src/utils"],
-  "exclude": ["node_modules", "dist", "src/__test__", "src/example"]
+  "exclude": ["node_modules", "dist", "src/packages/__test__", "src/example"]
 }
