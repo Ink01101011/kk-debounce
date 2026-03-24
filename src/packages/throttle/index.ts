@@ -20,8 +20,7 @@ export function throttle<T extends AnyFunction>(
   wait: number | ThrottleTemporalObjectType
 ): ThrottledFunction<T> {
   let timer: ReturnType<typeof setTimeout> | null = null;
-  let lastArgs: Parameters<T> | null = null;
-  let lastThis: ThisParameterType<T> | null = null;
+  let pendingCall: (() => void) | null = null;
 
   const waitMs = typeof wait === 'number' ? wait : convertTemporalToMs(wait);
 
@@ -30,18 +29,17 @@ export function throttle<T extends AnyFunction>(
     ...args: Parameters<T>
   ) {
     if (timer) {
-      lastArgs = args;
-      lastThis = this;
+      pendingCall = () => callback.apply(this, args);
       return;
     }
 
     callback.apply(this, args);
 
     const timeoutHandler = () => {
-      if (lastArgs) {
-        callback.apply(lastThis, lastArgs);
-        lastArgs = null;
-        lastThis = null;
+      if (pendingCall) {
+        const call = pendingCall;
+        pendingCall = null;
+        call();
         timer = setTimeout(timeoutHandler, waitMs);
       } else {
         timer = null;
@@ -54,8 +52,7 @@ export function throttle<T extends AnyFunction>(
   throttledFunction.cancel = () => {
     if (timer) clearTimeout(timer);
     timer = null;
-    lastArgs = null;
-    lastThis = null;
+    pendingCall = null;
   };
 
   return throttledFunction;
