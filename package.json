@@ -1,6 +1,6 @@
 {
   "name": "kk-debounce",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "The Next-Generation Debounce Library for 2026. Built for the modern web with native Temporal API support, AbortSignal integration, and Fine-grained Reactivity.",
   "type": "module",
   "sideEffects": false,
@@ -17,6 +17,50 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
+    },
+    "./debounce": {
+      "import": {
+        "types": "./dist/debounce.d.ts",
+        "default": "./dist/debounce.js"
+      },
+      "require": {
+        "types": "./dist/debounce.d.cts",
+        "default": "./dist/debounce.cjs"
+      }
+    },
+    "./debounceSignal": {
+      "import": {
+        "types": "./dist/debounceSignal.d.ts",
+        "default": "./dist/debounceSignal.js"
+      },
+      "require": {
+        "types": "./dist/debounceSignal.d.cts",
+        "default": "./dist/debounceSignal.cjs"
+      }
+    },
+    "./react": {
+      "import": {
+        "types": "./dist/react.d.ts",
+        "default": "./dist/react.js"
+      },
+      "require": {
+        "types": "./dist/react.d.cts",
+        "default": "./dist/react.cjs"
+      }
+    },
+    "./throttle": {
+      "import": {
+        "types": "./dist/throttle.d.ts",
+        "default": "./dist/throttle.js"
+      },
+      "require": {
+        "types": "./dist/throttle.d.cts",
+        "default": "./dist/throttle.cjs"
+      }
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "default": null
     }
   },
   "files": [
