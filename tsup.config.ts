@@ -1,7 +1,14 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/packages/index.ts'],
+  entry: {
+    index: 'src/packages/index.ts',
+    debounce: 'src/packages/debounce/index.ts',
+    debounceSignal: 'src/packages/debounceSignal/index.ts',
+    react: 'src/packages/react/index.ts',
+    throttle: 'src/packages/throttle/index.ts',
+    types: 'src/packages/types/index.ts',
+  },
   format: ['esm', 'cjs'],
   dts: true,
   clean: true,
