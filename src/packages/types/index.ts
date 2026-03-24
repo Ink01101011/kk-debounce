@@ -1,7 +1,7 @@
 /**
  * Represents any standard function that accepts any arguments and returns any value.
  */
-export type AnyFunction = (...args: any[]) => any;
+export type AnyFunction<T = any> = (...args: any[]) => T;
 
 /**
  * A Temporal-like object for defining durations.
@@ -14,6 +14,8 @@ export type DebounceTemporalObjectType = {
   seconds?: number;
   ms?: number;
 };
+
+export type ThrottleTemporalObjectType = DebounceTemporalObjectType; // Reuse the same structure for throttle durations
 
 /**
  * Configuration options for the debounce behavior.
@@ -40,6 +42,17 @@ export interface DebouncedFunction<T extends AnyFunction> {
   (...args: Parameters<T>): void;
   /**
    * Cancels any scheduled execution and aborts pending signals.
+   */
+  cancel(): void;
+}
+
+/**
+ * The interface for a function wrapped with throttle logic.
+ */
+export interface ThrottledFunction<T extends AnyFunction> {
+  (...args: Parameters<T>): void;
+  /**
+   * Cancellation capability.
    */
   cancel(): void;
 }

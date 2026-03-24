@@ -16,7 +16,7 @@ import type {
  * @param {DebounceOptions} [options] - Optional configurations.
  * @returns {DebouncedSignal<T>} A control object with .isPending and .value properties.
  * * @example
- * const search = createDebouncedSignal(
+ * const search = debouncedSignal(
  * () => state.query,
  * (v) => (state.query = v),
  * { ms: 500 }
@@ -25,7 +25,7 @@ import type {
  * search("new query");
  * console.log(search.isPending); // true
  */
-export function createDebouncedSignal<T>(
+export function debouncedSignal<T>(
   getter: () => T,
   setter: (val: T) => void,
   wait: number | DebounceTemporalObjectType,
