@@ -1,40 +1,35 @@
 # kk-debounce
 
-Type-safe debounce utilities for modern JavaScript and TypeScript applications.
+Type-safe debounce and throttle utilities for modern JavaScript and TypeScript apps.
 
 [![npm version](https://img.shields.io/npm/v/kk-debounce.svg)](https://www.npmjs.com/package/kk-debounce)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/kk-debounce)](https://bundlephobia.com/result?p=kk-debounce)
-[![CI](https://github.com/Ink01101011/kk-debounce/actions/workflows/ci.yml/badge.svg)](https://github.com/Ink01101011/kk-debounce/actions/workflows/ci.yml)
 
-## Highlights
+## Features
 
-- Temporal-style duration objects (`{ hours, minutes, seconds, ms }`).
-- Built-in cancellation support via `AbortSignal`.
-- `createDebouncedSignal` helper for reactive state workflows.
-- ESM + CJS outputs with tree-shakeable packaging.
+- Debounce with numeric delay or temporal objects (`{ hours, minutes, seconds, ms }`).
+- Debounced signal controller for reactive state flows.
+- Throttle utility with trailing behavior and cancellation support.
+- React hooks for debounce, debounced signal, and throttle.
+- ESM + CJS builds with subpath exports for better tree-shaking.
+- Strict type-only subpath export for `kk-debounce/types`.
 
-## Comparison with Popular Alternatives
+## Compare Table
 
-| Feature                                     | kk-debounce |      lodash.debounce      |        underscore         |       just-debounce-it        |
-| :------------------------------------------ | :---------: | :-----------------------: | :-----------------------: | :---------------------------: |
-| Numeric delay (ms)                          |     ✅      |            ✅             |            ✅             |              ✅               |
-| Readable duration object (`{ minutes: 1 }`) |     ✅      |            ❌             |            ❌             |              ❌               |
-| `AbortSignal` integration                   |     ✅      |            ❌             |            ❌             |              ❌               |
-| Reactive helper (`createDebouncedSignal`)   |     ✅      |            ❌             |            ❌             |              ❌               |
-| Type declarations bundled                   |     ✅      | ❌ (via `@types` package) | ❌ (via `@types` package) | ❌ (depends on version/setup) |
-| ESM + CJS output                            |     ✅      |            ✅             |            ✅             |              ✅               |
-
-This table is intended for migration planning and feature fit, not benchmark results.
+| Feature                                  | kk-debounce | lodash.debounce | underscore  | just-debounce-it |
+| :--------------------------------------- | :---------: | :-------------: | :---------: | :--------------: |
+| Numeric delay (ms)                       |     ✅      |       ✅        |     ✅      |        ✅        |
+| Temporal delay object (`{ minutes: 1 }`) |     ✅      |       ❌        |     ❌      |        ❌        |
+| Debounced signal controller              |     ✅      |       ❌        |     ❌      |        ❌        |
+| Throttle with cancellation               |     ✅      |  ❌ (separate)  | ✅ (simple) |        ❌        |
+| React hooks included                     |     ✅      |       ❌        |     ❌      |        ❌        |
+| Type-only subpath export (`/types`)      |     ✅      |       ❌        |     ❌      |        ❌        |
+| ESM + CJS outputs                        |     ✅      |       ✅        |     ✅      |        ✅        |
 
 ## Installation
 
 ```bash
 pnpm add kk-debounce
-```
-
-Alternative package managers:
-
-```bash
 npm install kk-debounce
 yarn add kk-debounce
 ```
@@ -46,182 +41,161 @@ yarn add kk-debounce
 ## Quick Start
 
 ```ts
-import { debounce, createDebouncedSignal } from 'kk-debounce';
+import { debounce, debouncedSignal, throttle } from 'kk-debounce';
 
-const saveDraft = debounce(
-  (payload: string) => console.log('Saved:', payload),
+const saveDraft = debounce((value: string) => console.log('saved:', value), {
+  ms: 300,
+});
+
+let state = '';
+const signal = debouncedSignal(
+  () => state,
+  (next) => {
+    state = next;
+  },
   { seconds: 1 }
 );
 
-let text = '';
-const textSignal = createDebouncedSignal(
-  () => text,
-  (next) => {
-    text = next;
-  },
-  { ms: 300 }
-);
+const throttledLog = throttle((value: string) => {
+  console.log('throttled:', value);
+}, 500);
 
 saveDraft('hello');
-textSignal('world');
+signal('world');
+throttledLog('A');
+```
+
+## Subpath Imports (Recommended)
+
+Use subpaths to import only what you need:
+
+```ts
+import { debounce } from 'kk-debounce/debounce';
+import { debouncedSignal } from 'kk-debounce/debounceSignal';
+import { throttle } from 'kk-debounce/throttle';
+import {
+  useDebounce,
+  useDebounceSignal,
+  useThrottled,
+} from 'kk-debounce/react';
+import type { DebounceOptions, ThrottledFunction } from 'kk-debounce/types';
+```
+
+## Type-Only Subpath
+
+`kk-debounce/types` is exported as a strict type-only subpath.
+
+- Valid:
+
+```ts
+import type { DebounceOptions } from 'kk-debounce/types';
+```
+
+- Invalid runtime import (will fail by design):
+
+```ts
+import 'kk-debounce/types';
 ```
 
 ## API
 
-### debounce(func, wait, options?)
+### `debounce(func, wait, options?)`
 
-Creates a debounced function that delays execution until `wait` has elapsed since the last call.
-
-Parameters:
+Creates a debounced function.
 
 - `func`: callback to debounce.
 - `wait`: `number | DebounceTemporalObjectType`.
-- `options.autoAbort?`: when `true`, aborts previous internal controller on new calls.
-- `options.signal?`: external `AbortSignal` to link cancellation.
+- `options.autoAbort?`: abort previous internal cycle when a new call starts.
+- `options.signal?`: external `AbortSignal` that can cancel pending debounce execution before callback runs.
+- Returns: callable with `.cancel()`.
 
-Returns:
+#### AbortSignal behavior (important)
 
-- Debounced callable with `cancel(): void`.
+`debounce` does not inject an `AbortSignal` into your callback arguments.
+It only forwards arguments you pass when calling the debounced function.
 
-### createDebouncedSignal(getter, setter, wait, options?)
-
-Creates a debounced state controller for reactive flows.
-
-Returns an object/function with:
-
-- `value`: latest pending or committed value.
-- `isPending`: whether an update is waiting.
-- `cancel()`: cancel pending update.
-- `flush()`: immediately apply pending value.
-
-## Migration from lodash.debounce
-
-Use these patterns to migrate incrementally with minimal refactor risk.
-
-### 1) Basic debounce
+- Wrong:
 
 ```ts
-// lodash.debounce
+const debouncedSearch = debounce(async (query: string, signal: AbortSignal) => {
+  await fetch(`/api/search?q=${query}`, { signal });
+}, 300);
+
+debouncedSearch('react');
+// signal is undefined because it was never passed by the caller.
+```
+
+- Correct A (no fetch cancellation):
+
+```ts
+const debouncedSearch = debounce(async (query: string) => {
+  await fetch(`/api/search?q=${query}`);
+}, 300);
+```
+
+- Correct B (manual signal passing):
+
+```ts
+const debouncedSearch = debounce(async (query: string, signal: AbortSignal) => {
+  await fetch(`/api/search?q=${query}`, { signal });
+}, 300);
+
+const controller = new AbortController();
+debouncedSearch('react', controller.signal);
+```
+
+### `debouncedSignal(getter, setter, wait, options?)`
+
+Creates a debounced state controller.
+
+- Returns callable with:
+- `value` (latest pending or committed value)
+- `isPending`
+- `cancel()`
+- `flush()`
+
+### `throttle(callback, wait)`
+
+Creates a throttled callback.
+
+- Immediate first call.
+- While active, keeps latest pending arguments.
+- Replays latest pending call when the current window ends.
+- Returns callable with `.cancel()`.
+
+### React hooks (`kk-debounce/react`)
+
+- `useDebounce(callback, wait, options?)`
+- `useDebounceSignal(getter, setter, wait, options?)`
+- `useThrottled(callback, wait)`
+
+## Migration Notes
+
+### From lodash.debounce
+
+```ts
+// before
 import debounce from 'lodash.debounce';
 
-const onResize = debounce(() => {
-  console.log('resize');
-}, 250);
+// after
+import { debounce } from 'kk-debounce/debounce';
 ```
+
+### Replace magic milliseconds with readable durations
 
 ```ts
-// kk-debounce
-import { debounce } from 'kk-debounce';
-
-const onResize = debounce(() => {
-  console.log('resize');
-}, 250);
+const save = debounce(handler, { minutes: 1, seconds: 30 });
 ```
 
-### 2) Replace magic milliseconds with readable duration objects
-
-```ts
-// lodash.debounce
-const saveDraft = debounce(save, 90000);
-```
-
-```ts
-// kk-debounce
-const saveDraft = debounce(save, { minutes: 1, seconds: 30 });
-```
-
-### 3) Cancel behavior parity
-
-Both libraries expose `.cancel()` on the returned debounced function.
-
-```ts
-const job = debounce(runTask, 300);
-job();
-job.cancel();
-```
-
-### 4) Optional upgrades during migration
-
-- Enable `autoAbort` to cancel previous pending cycles on rapid calls.
-- Link external cancellation with `options.signal`.
-- Move state-heavy input flows to `createDebouncedSignal` for pending-state visibility.
-
-### 5) Common import update checklist
-
-- Replace `import debounce from 'lodash.debounce'` with `import { debounce } from 'kk-debounce'`.
-- Remove `lodash.debounce` from dependencies after migration is complete.
-- Run tests to confirm call timing assumptions in critical paths.
-
-### Migration Cost by Library
-
-| From library             | Migration cost | Why                                                                                                                                                             |
-| :----------------------- | :------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lodash.debounce`        |      Low       | API shape is very similar for basic usage. Most changes are import replacement plus optional duration-object adoption.                                          |
-| `underscore`             |     Medium     | Similar debounce behavior, but projects often have mixed underscore utility usage and older module patterns that need cleanup during migration.                 |
-| `just-debounce-it`       |     Medium     | Core debounce usage is simple to migrate, but teams usually need to add missing capabilities (`AbortSignal`, reactive helper, richer typing) in adoption phase. |
-| Custom in-house debounce |      High      | Behavior differences (leading/trailing semantics, cancellation contracts, edge cases) require explicit test verification before rollout.                        |
-
-Cost criteria: estimated by API delta, refactor scope, and risk of behavioral regression in existing call paths.
-
-## Usage Examples
-
-### Search Input
-
-```ts
-import { debounce } from 'kk-debounce';
-
-const search = debounce(
-  async (query: string) => {
-    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-    const result = await response.json();
-    console.log('Latest result:', result);
-  },
-  { ms: 500 },
-  { autoAbort: true }
-);
-
-search('rea');
-search('react');
-search('react 19');
-```
-
-### Reactive State
-
-```ts
-import { createDebouncedSignal } from 'kk-debounce';
-
-let state = '';
-
-const signal = createDebouncedSignal(
-  () => state,
-  (value) => {
-    state = value;
-  },
-  { seconds: 1 }
-);
-
-signal('next value');
-
-if (signal.isPending) {
-  console.log('Waiting...');
-}
-
-signal.flush();
-```
-
-Additional examples:
+## Examples
 
 - `src/example/debounce.example.ts`
 - `src/example/createDebounceSignal.example.ts`
-
-## Compatibility
-
-- JavaScript: supported (ESM and CommonJS).
-- TypeScript: supported with bundled declarations.
+- `src/example/react/index.tsx`
 
 ## Development
 
-For maintainers and release process, see `DEVELOP.md`.
+See `DEVELOP.md`.
 
 ## License
 

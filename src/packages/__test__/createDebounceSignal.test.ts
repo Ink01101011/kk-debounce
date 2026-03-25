@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { createDebouncedSignal } from '../packages/createDebounceSignal';
+import { debouncedSignal } from '../debounceSignal';
 
-describe('createDebouncedSignal', () => {
+describe('debouncedSignal', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -16,7 +16,7 @@ describe('createDebouncedSignal', () => {
       source = v;
     });
 
-    const signal = createDebouncedSignal(() => source, setter, 200);
+    const signal = debouncedSignal(() => source, setter, 200);
 
     signal('hello');
     expect(signal.isPending).toBe(true);
@@ -34,7 +34,7 @@ describe('createDebouncedSignal', () => {
       source = v;
     });
 
-    const signal = createDebouncedSignal(() => source, setter, 150);
+    const signal = debouncedSignal(() => source, setter, 150);
 
     signal('new');
     signal.cancel();
@@ -51,7 +51,7 @@ describe('createDebouncedSignal', () => {
       source = v;
     });
 
-    const signal = createDebouncedSignal(() => source, setter, 300);
+    const signal = debouncedSignal(() => source, setter, 300);
 
     signal('after');
     signal.flush();

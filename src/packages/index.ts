@@ -1,3 +1,4 @@
 export * from './debounce';
-export * from './createDebounceSignal';
+export * from './debounceSignal';
+export * from './throttle';
 export * from './types';
