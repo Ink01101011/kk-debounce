@@ -31,5 +31,11 @@ export default function useThrottled<T extends AnyFunction>(
     [wait]
   );
 
+  React.useEffect(() => {
+    return () => {
+      throttledFunction.cancel();
+    };
+  }, [throttledFunction]);
+
   return throttledFunction;
 }
