@@ -18,7 +18,7 @@ import {
  * @param {DebounceOptions} [options={ autoAbort: true }] - Debounce behavior options.
  * @returns {DebouncedSignal<T>} Signal controller with `isPending`, `flush`, and `cancel`.
  */
-function useCreateDebounceSignal<T>(
+function useDebounceSignal<T>(
   getter: () => T,
   setter: AnyFunction<T>,
   wait: number | DebounceTemporalObjectType,
@@ -50,4 +50,4 @@ function useCreateDebounceSignal<T>(
   return searchController;
 }
 
-export default useCreateDebounceSignal;
+export default useDebounceSignal;
