@@ -29,7 +29,7 @@ function useDebounce<T extends AnyFunction>(
 
   const debouncedFn = React.useMemo(
     () => debounce((...args) => cbRef.current(...args), wait, options),
-    [wait, JSON.stringify(options)]
+    [wait, options?.autoAbort, options?.signal]
   );
 
   React.useEffect(() => {

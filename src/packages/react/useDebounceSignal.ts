@@ -40,7 +40,7 @@ function useCreateDebounceSignal<T>(
         wait,
         options
       ),
-    [wait, JSON.stringify(options)]
+    [wait, options?.autoAbort, options?.signal]
   );
 
   React.useEffect(() => {
