@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { useDebouncedSignal } from 'kk-debounce/react';
+import { useDebounceSignal } from 'kk-debounce/react';
 
 export function ProfileEditor() {
   const [name, setName] = useState("John Doe");
   const [localName, setLocalName] = useState(name);
-
   // 🚀 Initialize our custom hook
-  const debouncedUpdate = useDebouncedSignal(
+  const debouncedUpdate = useDebounceSignal(
     () => name,           // Current source of truth
     (val) => setName(val), // Update the real state
     { ms: 800 },          // Wait 800ms
