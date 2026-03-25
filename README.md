@@ -106,8 +106,43 @@ Creates a debounced function.
 - `func`: callback to debounce.
 - `wait`: `number | DebounceTemporalObjectType`.
 - `options.autoAbort?`: abort previous internal cycle when a new call starts.
-- `options.signal?`: external `AbortSignal` linked to internal cancellation.
+- `options.signal?`: external `AbortSignal` that can cancel pending debounce execution before callback runs.
 - Returns: callable with `.cancel()`.
+
+#### AbortSignal behavior (important)
+
+`debounce` does not inject an `AbortSignal` into your callback arguments.
+It only forwards arguments you pass when calling the debounced function.
+
+- Wrong:
+
+```ts
+const debouncedSearch = debounce(async (query: string, signal: AbortSignal) => {
+  await fetch(`/api/search?q=${query}`, { signal });
+}, 300);
+
+debouncedSearch('react');
+// signal is undefined because it was never passed by the caller.
+```
+
+- Correct A (no fetch cancellation):
+
+```ts
+const debouncedSearch = debounce(async (query: string) => {
+  await fetch(`/api/search?q=${query}`);
+}, 300);
+```
+
+- Correct B (manual signal passing):
+
+```ts
+const debouncedSearch = debounce(async (query: string, signal: AbortSignal) => {
+  await fetch(`/api/search?q=${query}`, { signal });
+}, 300);
+
+const controller = new AbortController();
+debouncedSearch('react', controller.signal);
+```
 
 ### `debouncedSignal(getter, setter, wait, options?)`
 
