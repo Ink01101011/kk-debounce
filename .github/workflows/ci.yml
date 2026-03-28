@@ -40,16 +40,16 @@ jobs:
         run: pnpm run check:cve:full
 
   react-compatibility:
-    name: React Compatibility (React ${{ matrix.react-version }})
+    name: React Compatibility (React ${{ matrix.react_version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - react-version: 18
-            react-types-version: 18
-          - react-version: 19
-            react-types-version: 19
+          - react_version: 18
+            react_types_version: 18
+          - react_version: 19
+            react_types_version: 19
 
     steps:
       - name: Checkout
@@ -68,7 +68,7 @@ jobs:
         run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Switch React version for compatibility validation
-        run: pnpm add -D react@^${{ matrix.react-version }} @types/react@^${{ matrix.react-types-version }} --no-save
+        run: pnpm add -D react@^${{ matrix.react_version }} @types/react@^${{ matrix.react_types_version }}
 
       - name: Run React compatibility checks
         run: pnpm run typecheck && pnpm run test
