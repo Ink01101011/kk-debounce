@@ -1,7 +1,7 @@
-import { useMemo, useEffect } from 'react';
-import { debounce } from 'kk-debounce';
+import { debounce } from 'kk-debounce/debounce';
+import { useEffect, useMemo } from 'react';
 
-function SearchComponent() {
+export default function SearchComponent() {
   
   const debouncedSearch = useMemo(
     () =>
@@ -12,7 +12,8 @@ function SearchComponent() {
             const data = await response.json();
             console.log(data);
           } catch (err) {
-            if (err.name === 'AbortError') console.log('Fetch aborted');
+            const e = err as Error;
+            if (e.name === 'AbortError') console.log('Fetch aborted');
           }
         },
         { ms: 500 },

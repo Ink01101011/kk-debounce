@@ -1,20 +1,21 @@
-import { createDebouncedSignal } from '../packages/createDebounceSignal';
+import { debouncedSignal } from 'kk-debounce/debounceSignal';
 
 let internalSearchState = '';
-
+const abortController = new AbortController();
 const fakeApi = {
   search(query: string) {
     console.log('Searching:', query);
   },
 };
 
-const searchAction = createDebouncedSignal(
+const searchAction = debouncedSignal(
   () => internalSearchState,
   (val) => {
     internalSearchState = val;
     fakeApi.search(val);
   },
-  { seconds: 1 }
+  { seconds: 1 },
+  { signal: abortController.signal }
 );
 
 // User types
