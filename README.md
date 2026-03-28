@@ -103,7 +103,7 @@ const updateSearch = debouncedSignal(
     searchTerm = nextValue;
     console.log('Searching for:', nextValue);
   },
-  { ms: 400 }
+  { seconds: 2 }
 );
 
 updateSearch('rea');
@@ -190,7 +190,11 @@ export function ProfileEditor() {
 
 Creates a debounced function that delays execution until calls stop for the configured wait time.
 
-- Supports `number` or temporal objects like `{ ms: 300 }`
+- Supports `number` (ms) or temporal objects like `{ minutes: 1, seconds: 30 }`
+- Supports `options.behavior`:
+- `trailing` (default): invoke after delay with the latest arguments
+- `leading`: invoke immediately on the first call, then wait for the next window
+- Supports `options.autoAbort` and external `options.signal`
 - Returns a callable function with `.cancel()`
 
 ### `throttle(callback, wait)`
