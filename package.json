@@ -1,7 +1,7 @@
 {
   "name": "kk-debounce",
   "version": "1.0.3",
-  "description": "The Next-Generation Debounce Library for 2026. Built for the modern web with native Temporal API support, AbortSignal integration, and Fine-grained Reactivity.",
+  "description": "A lightweight, zero-dependency utility for debounce and throttle in JavaScript and TypeScript apps, with built-in React hooks for common UI workflows.",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",
