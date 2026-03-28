@@ -1,21 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { debounce } from 'kk-debounce';
+import { useDebounce } from 'kk-debounce/react';
 
-function Editor() {
+export default function Editor() {
   const [content, setContent] = useState('');
+  
+  const autoSave = useDebounce(async (text: string) => {
+    console.log('Saving to Database...', text);
+    // Simulate API Call
+    await new Promise((res) => setTimeout(res, 1000));
+  }, 2000); // รอ 2 วินาทีหลังจากหยุดพิมพ์
 
-  const autoSave = useMemo(
-    () =>
-      debounce(
-        async (text: string) => {
-          console.log('Saving to Database...', text);
-          // Simulate API Call
-          await new Promise((res) => setTimeout(res, 1000));
-        },
-        { seconds: 2 }
-      ), // รอ 2 วินาทีหลังจากหยุดพิมพ์
-    []
-  );
+  
 
   // 🛡️ Safety Mechanism: ถ้า User จะปิดแท็บ ให้เซฟทันที!
   useEffect(() => {
@@ -23,7 +18,6 @@ function Editor() {
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
-      autoSave.flush(); // เซฟงานค้างตอน Component Unmount
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [autoSave]);

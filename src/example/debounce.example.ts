@@ -1,4 +1,4 @@
-import { debounce } from '../packages/debounce';
+import { debounce } from 'kk-debounce/debounce';
 
 // Simulate a search task: only the latest call should run after idle time.
 const search = debounce(
@@ -7,7 +7,7 @@ const search = debounce(
     const result = await response.json();
     console.log('Latest result:', result);
   },
-  { ms: 500 },
+  { seconds: 0.5 },
   { autoAbort: true }
 );
 
