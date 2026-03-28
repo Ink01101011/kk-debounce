@@ -7,6 +7,11 @@
 - Expanded `README.md` into a more npm-ready package overview with badges, features, requirements, supported environments, and subpath import guidance.
 - Added usage examples for `debounce`, `throttle`, `debouncedSignal`, `useDebounce`, `useThrottled`, and `useDebounceSignal`.
 - Updated README positioning to reflect the current public API, including React hook support and throttle support.
+- Updated API docs for `debounce` options to explicitly describe `behavior: 'leading' | 'trailing'`.
+
+### Tests
+
+- Added explicit debounce tests for `options.behavior` to verify both `leading` and `trailing` behaviors.
 
 ### Security
 
