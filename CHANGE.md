@@ -12,6 +12,11 @@
 ### Tests
 
 - Added explicit debounce tests for `options.behavior` to verify both `leading` and `trailing` behaviors.
+- Added React hook regression tests to verify `useDebounce` and `useDebounceSignal` recreate memoized handlers/controllers when `options.behavior` changes.
+
+### Maintenance
+
+- Cleaned up Vitest module-mocking warnings by replacing hoisted `vi.unmock(...)` usage in test cleanup with `vi.doUnmock(...)`.
 
 ### Security
 
