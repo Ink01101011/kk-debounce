@@ -8,6 +8,14 @@
 - Added usage examples for `debounce`, `throttle`, `debouncedSignal`, `useDebounce`, `useThrottled`, and `useDebounceSignal`.
 - Updated README positioning to reflect the current public API, including React hook support and throttle support.
 - Updated API docs for `debounce` options to explicitly describe `behavior: 'leading' | 'trailing'`.
+- Added a dedicated "More Examples" section in `README.md` with direct file references for core and React scenarios.
+
+### Examples
+
+- Added `src/example/debounce.behavior.example.ts` to cover `leading` and `trailing` debounce behavior.
+- Added `src/example/debounce.abort-signal.example.ts` to demonstrate external `AbortSignal` usage.
+- Added `src/example/throttle.example.ts` to demonstrate throttling high-frequency events.
+- Added `src/example/react/ThrottledMouseTracker.tsx` to demonstrate `useThrottled` in React.
 
 ### Tests
 
