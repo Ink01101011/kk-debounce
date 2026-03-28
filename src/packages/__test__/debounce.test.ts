@@ -26,6 +26,42 @@ describe('debounce', () => {
     expect(fn).toHaveBeenCalledWith('second');
   });
 
+  it('supports behavior=trailing explicitly', () => {
+    const fn = vi.fn();
+    const debounced = debounce(fn, 100, { behavior: 'trailing' });
+
+    debounced('first');
+    debounced('second');
+
+    vi.advanceTimersByTime(99);
+    expect(fn).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(1);
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(fn).toHaveBeenCalledWith('second');
+  });
+
+  it('supports behavior=leading and only invokes at the leading edge per window', () => {
+    const fn = vi.fn();
+    const debounced = debounce(fn, 100, { behavior: 'leading' });
+
+    debounced('first');
+    debounced('second');
+    debounced('third');
+
+    // Leading mode should call immediately on first invocation only.
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(fn).toHaveBeenCalledWith('first');
+
+    vi.advanceTimersByTime(100);
+    expect(fn).toHaveBeenCalledTimes(1);
+
+    // A new window allows the next leading call.
+    debounced('fourth');
+    expect(fn).toHaveBeenCalledTimes(2);
+    expect(fn).toHaveBeenNthCalledWith(2, 'fourth');
+  });
+
   it('supports temporal object durations', () => {
     const fn = vi.fn();
     const debounced = debounce(fn, { seconds: 1, ms: 50 });

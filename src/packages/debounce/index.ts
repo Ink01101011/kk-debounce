@@ -27,15 +27,19 @@ export function debounce<T extends AnyFunction>(
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let controller: AbortController | null = null;
 
+  const { behavior = 'trailing', autoAbort = false, signal } = options;
   const delay = typeof wait === 'number' ? wait : convertTemporalToMs(wait);
 
   const debouncedFunction = function (
     this: ThisParameterType<T>,
     ...args: Parameters<T>
   ): void {
-    if (options.autoAbort && controller) {
+    if (autoAbort && controller) {
       controller.abort('Debounced: New call initiated');
     }
+
+    const isLeading = behavior === 'leading';
+    const canInvokeNow = isLeading && !timeoutId;
 
     if (timeoutId) {
       clearTimeout(timeoutId);
@@ -45,17 +49,24 @@ export function debounce<T extends AnyFunction>(
 
     const internalSignal = controller.signal;
     const combinedSignal =
-      options.signal && 'any' in AbortSignal
-        ? AbortSignal.any([options.signal, internalSignal])
+      signal && 'any' in AbortSignal
+        ? AbortSignal.any([signal, internalSignal])
         : internalSignal;
+
+    if (canInvokeNow) {
+      func.apply(this, args);
+    }
 
     timeoutId = setTimeout(() => {
       if (combinedSignal.aborted) {
         controller = null;
+        timeoutId = null;
         return;
       }
 
-      func.apply(this, args);
+      if (!isLeading) {
+        func.apply(this, args);
+      }
 
       timeoutId = null;
       controller = null;

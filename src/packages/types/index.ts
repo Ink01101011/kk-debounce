@@ -17,6 +17,8 @@ export type DebounceTemporalObjectType = {
 
 export type ThrottleTemporalObjectType = DebounceTemporalObjectType; // Reuse the same structure for throttle durations
 
+export type DebounceOptionsBehavior = 'leading' | 'trailing';
+
 /**
  * Configuration options for the debounce behavior.
  */
@@ -33,6 +35,12 @@ export interface DebounceOptions {
    * Allows manual cancellation from parent controllers (e.g., React's useEffect cleanup).
    */
   signal?: AbortSignal;
+
+  /**
+   * "trailing": Execute after the delay (Default).
+   * "leading": Execute immediately on the first call, then silence for the delay.
+   */
+  behavior?: DebounceOptionsBehavior;
 }
 
 /**
