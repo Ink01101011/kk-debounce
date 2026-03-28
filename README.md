@@ -161,8 +161,8 @@ export function ProfileEditor() {
   const debouncedUpdate = useDebounceSignal(
     () => name,
     (value) => setName(value),
-    { ms: 800 },
-    { autoAbort: true }
+    800,
+    { autoAbort: true } // autoAbort defaults to true; shown here for clarity
   );
 
   return (
