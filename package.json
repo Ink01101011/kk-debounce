@@ -91,11 +91,13 @@
   },
   "keywords": [
     "debounce",
-    "temporal",
-    "abortsignal",
-    "reactive",
-    "signals",
-    "typescript"
+    "throttle",
+    "optimization",
+    "performance",
+    "utils",
+    "javascript-utility",
+    "kk-debounce",
+    "ink01101011"
   ],
   "license": "MIT",
   "devDependencies": {
