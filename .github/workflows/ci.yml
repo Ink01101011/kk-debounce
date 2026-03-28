@@ -31,5 +31,10 @@ jobs:
       - name: Run quality and security gate
         run: pnpm run check:all
 
-      - name: CVE check (all dependencies)
+      # Release gate: production dependency vulnerabilities block publishing.
+      - name: Release gate CVE check (production dependencies)
+        run: pnpm run check:cve -- --prod
+
+      # Tracking only: dev tooling vulnerabilities are surfaced for maintenance follow-up.
+      - name: Tracking CVE check (dev tools dependencies)
         run: pnpm run check:cve:full

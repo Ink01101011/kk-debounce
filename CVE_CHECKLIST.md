@@ -5,7 +5,9 @@ Run this checklist before each release.
 ## 1) Automated checks
 
 - `pnpm run check:cve`
+  Release gate for production dependencies. This is the check that must pass before publishing.
 - `pnpm run check:cve:full`
+  Tracking check for dev tooling vulnerabilities. Use it to monitor issues in build, test, lint, and CI dependencies.
 
 ## 2) Review findings
 
@@ -21,4 +23,6 @@ Run this checklist before each release.
 ## 4) Release gate
 
 - Do not publish if `high` or `critical` vulnerabilities are unresolved.
+- Treat `pnpm run check:cve` as the publish gate for runtime and production dependency risk.
+- Treat `pnpm run check:cve:full` as a maintenance signal for dev tooling, not as the publish gate.
 - Re-run `pnpm run check:all` before `pnpm publish`.

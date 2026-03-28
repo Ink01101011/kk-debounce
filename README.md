@@ -1,73 +1,53 @@
-# kk-debounce
+# kk-debounce 🚀
 
-Type-safe debounce and throttle utilities for modern JavaScript and TypeScript apps.
-
-[![npm version](https://img.shields.io/npm/v/kk-debounce.svg)](https://www.npmjs.com/package/kk-debounce)
+[![CI](https://github.com/Ink01101011/kk-debounce/actions/workflows/ci.yml/badge.svg)](https://github.com/Ink01101011/kk-debounce/actions/workflows/ci.yml)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/kk-debounce)](https://bundlephobia.com/result?p=kk-debounce)
+[![npm version](https://img.shields.io/npm/v/kk-debounce.svg)](https://www.npmjs.com/package/kk-debounce)
+[![license](https://img.shields.io/npm/l/kk-debounce.svg)](https://github.com/Ink01101011/kk-debounce/blob/main/LICENSE)
+[![install size](https://img.shields.io/badge/install%20size-lightweight-green)](https://www.npmjs.com/package/kk-debounce)
+
+A **lightweight**, **zero-dependency** utility for **debounce** and **throttle** in JavaScript and TypeScript apps, with built-in React hooks for common UI workflows.
 
 ## Features
 
-- Debounce with numeric delay or temporal objects (`{ hours, minutes, seconds, ms }`).
-- Debounced signal controller for reactive state flows.
-- Throttle utility with trailing behavior and cancellation support.
-- React hooks for debounce, debounced signal, and throttle.
-- ESM + CJS builds with subpath exports for better tree-shaking.
-- Strict type-only subpath export for `kk-debounce/types`.
-
-## Compare Table
-
-| Feature                                  | kk-debounce | lodash.debounce | underscore  | just-debounce-it |
-| :--------------------------------------- | :---------: | :-------------: | :---------: | :--------------: |
-| Numeric delay (ms)                       |     ✅      |       ✅        |     ✅      |        ✅        |
-| Temporal delay object (`{ minutes: 1 }`) |     ✅      |       ❌        |     ❌      |        ❌        |
-| Debounced signal controller              |     ✅      |       ❌        |     ❌      |        ❌        |
-| Throttle with cancellation               |     ✅      |  ❌ (separate)  | ✅ (simple) |        ❌        |
-| React hooks included                     |     ✅      |       ❌        |     ❌      |        ❌        |
-| Type-only subpath export (`/types`)      |     ✅      |       ❌        |     ❌      |        ❌        |
-| ESM + CJS outputs                        |     ✅      |       ✅        |     ✅      |        ✅        |
-
-## Installation
-
-```bash
-pnpm add kk-debounce
-npm install kk-debounce
-yarn add kk-debounce
-```
+- Debounce callbacks with numeric delays or temporal objects
+- Throttle frequent events like scroll, resize, and mouse movement
+- Debounced signal controller with `value`, `isPending`, `cancel()`, and `flush()`
+- React hooks for debounce, debounced signals, and throttled callbacks
+- ESM and CJS package exports
+- Zero runtime dependencies
 
 ## Requirements
 
-- Node.js >= 18
+- Node.js 18+
+- React 18+ for `kk-debounce/react`
 
-## Quick Start
+## 📦 Installation
 
-```ts
-import { debounce, debouncedSignal, throttle } from 'kk-debounce';
+Install with your preferred package manager:
 
-const saveDraft = debounce((value: string) => console.log('saved:', value), {
-  ms: 300,
-});
-
-let state = '';
-const signal = debouncedSignal(
-  () => state,
-  (next) => {
-    state = next;
-  },
-  { seconds: 1 }
-);
-
-const throttledLog = throttle((value: string) => {
-  console.log('throttled:', value);
-}, 500);
-
-saveDraft('hello');
-signal('world');
-throttledLog('A');
+```bash
+npm install kk-debounce
 ```
 
-## Subpath Imports (Recommended)
+```bash
+pnpm add kk-debounce
+```
 
-Use subpaths to import only what you need:
+```bash
+yarn add kk-debounce
+```
+
+## Supported Environments
+
+- JavaScript and TypeScript projects
+- React applications via `kk-debounce/react`
+- Browser applications using ESM or CJS builds
+- Node.js runtimes
+
+## Subpath Imports
+
+Import only what you need:
 
 ```ts
 import { debounce } from 'kk-debounce/debounce';
@@ -78,125 +58,170 @@ import {
   useDebounceSignal,
   useThrottled,
 } from 'kk-debounce/react';
-import type { DebounceOptions, ThrottledFunction } from 'kk-debounce/types';
 ```
 
-## Type-Only Subpath
+## 🚀 Usage
 
-`kk-debounce/types` is exported as a strict type-only subpath.
+### Debounce
 
-- Valid:
+```javascript
+import { debounce } from 'kk-debounce';
 
-```ts
-import type { DebounceOptions } from 'kk-debounce/types';
+const handleSearch = debounce((query) => {
+  console.log('Searching for:', query);
+}, 500);
+
+// This will only fire once, 500ms after the last call.
+handleSearch('Hello');
+handleSearch('Hello World');
 ```
 
-- Invalid runtime import (will fail by design):
+### Throttle
+
+```javascript
+import { throttle } from 'kk-debounce';
+
+const handleScroll = throttle((position) => {
+  console.log('Scroll position:', position);
+}, 200);
+
+window.addEventListener('scroll', () => {
+  handleScroll(window.scrollY);
+});
+```
+
+### Debounced Signal
 
 ```ts
-import 'kk-debounce/types';
+import { debouncedSignal } from 'kk-debounce';
+
+let searchTerm = '';
+
+const updateSearch = debouncedSignal(
+  () => searchTerm,
+  (nextValue) => {
+    searchTerm = nextValue;
+    console.log('Searching for:', nextValue);
+  },
+  { ms: 400 }
+);
+
+updateSearch('rea');
+updateSearch('react');
+
+if (updateSearch.isPending) {
+  console.log('Waiting for typing to stop...');
+}
+
+updateSearch.flush();
+```
+
+### React: `useDebounce` and `useThrottled`
+
+```tsx
+import { useState } from 'react';
+import { useDebounce, useThrottled } from 'kk-debounce/react';
+
+export function SearchBox() {
+  const [query, setQuery] = useState('');
+
+  const saveDraft = useDebounce((value: string) => {
+    console.log('Saving draft:', value);
+  }, 300);
+
+  const trackTyping = useThrottled((value: string) => {
+    console.log('Typing:', value);
+  }, 500);
+
+  return (
+    <input
+      value={query}
+      onChange={(event) => {
+        const nextValue = event.target.value;
+        setQuery(nextValue);
+        saveDraft(nextValue);
+        trackTyping(nextValue);
+      }}
+      placeholder="Search..."
+    />
+  );
+}
+```
+
+### React: `useDebounceSignal`
+
+```tsx
+import { useState } from 'react';
+import { useDebounceSignal } from 'kk-debounce/react';
+
+export function ProfileEditor() {
+  const [name, setName] = useState('John Doe');
+  const [draftName, setDraftName] = useState(name);
+
+  const debouncedUpdate = useDebounceSignal(
+    () => name,
+    (value) => setName(value),
+    800,
+    { autoAbort: true } // autoAbort defaults to true; shown here for clarity
+  );
+
+  return (
+    <div>
+      <input
+        value={draftName}
+        onChange={(event) => {
+          const nextValue = event.target.value;
+          setDraftName(nextValue);
+          debouncedUpdate(nextValue);
+        }}
+      />
+
+      {debouncedUpdate.isPending && <p>Saving...</p>}
+
+      <button onClick={() => debouncedUpdate.flush()}>Save now</button>
+    </div>
+  );
+}
 ```
 
 ## API
 
-### `debounce(func, wait, options?)`
+### `debounce(callback, wait, options?)`
 
-Creates a debounced function.
+Creates a debounced function that delays execution until calls stop for the configured wait time.
 
-- `func`: callback to debounce.
-- `wait`: `number | DebounceTemporalObjectType`.
-- `options.autoAbort?`: abort previous internal cycle when a new call starts.
-- `options.signal?`: external `AbortSignal` that can cancel pending debounce execution before callback runs.
-- Returns: callable with `.cancel()`.
-
-#### AbortSignal behavior (important)
-
-`debounce` does not inject an `AbortSignal` into your callback arguments.
-It only forwards arguments you pass when calling the debounced function.
-
-- Wrong:
-
-```ts
-const debouncedSearch = debounce(async (query: string, signal: AbortSignal) => {
-  await fetch(`/api/search?q=${query}`, { signal });
-}, 300);
-
-debouncedSearch('react');
-// signal is undefined because it was never passed by the caller.
-```
-
-- Correct A (no fetch cancellation):
-
-```ts
-const debouncedSearch = debounce(async (query: string) => {
-  await fetch(`/api/search?q=${query}`);
-}, 300);
-```
-
-- Correct B (manual signal passing):
-
-```ts
-const debouncedSearch = debounce(async (query: string, signal: AbortSignal) => {
-  await fetch(`/api/search?q=${query}`, { signal });
-}, 300);
-
-const controller = new AbortController();
-debouncedSearch('react', controller.signal);
-```
-
-### `debouncedSignal(getter, setter, wait, options?)`
-
-Creates a debounced state controller.
-
-- Returns callable with:
-- `value` (latest pending or committed value)
-- `isPending`
-- `cancel()`
-- `flush()`
+- Supports `number` or temporal objects like `{ ms: 300 }`
+- Returns a callable function with `.cancel()`
 
 ### `throttle(callback, wait)`
 
-Creates a throttled callback.
+Creates a throttled function that runs immediately, then limits how often subsequent calls can execute.
 
-- Immediate first call.
-- While active, keeps latest pending arguments.
-- Replays latest pending call when the current window ends.
-- Returns callable with `.cancel()`.
+- Supports `number` or temporal objects
+- Returns a callable function with `.cancel()`
 
-### React hooks (`kk-debounce/react`)
+### `debouncedSignal(getter, setter, wait, options?)`
+
+Creates a debounced controller for state-like values.
+
+- `value`: current committed or pending value
+- `isPending`: whether an update is waiting to run
+- `cancel()`: clear the pending update
+- `flush()`: apply the pending value immediately
+
+### React Hooks
 
 - `useDebounce(callback, wait, options?)`
 - `useDebounceSignal(getter, setter, wait, options?)`
 - `useThrottled(callback, wait)`
 
-## Migration Notes
+### Why use kk-debounce?
 
-### From lodash.debounce
-
-```ts
-// before
-import debounce from 'lodash.debounce';
-
-// after
-import { debounce } from 'kk-debounce/debounce';
-```
-
-### Replace magic milliseconds with readable durations
-
-```ts
-const save = debounce(handler, { minutes: 1, seconds: 30 });
-```
-
-## Examples
-
-- `src/example/debounce.example.ts`
-- `src/example/createDebounceSignal.example.ts`
-- `src/example/react/index.tsx`
-
-## Development
-
-See `DEVELOP.md`.
+- **Small footprint:** Zero dependencies.
+- **Easy to use:** Simple API for debounce, throttle, and React hooks.
+- **Framework-friendly:** Works in plain JavaScript/TypeScript and ships custom hooks for React.
+- **Performance:** Ideal for search inputs, window resizing, scroll events, and autosave flows.
 
 ## License
 
-MIT
+MIT © [Ink01101011](https://github.com/Ink01101011)

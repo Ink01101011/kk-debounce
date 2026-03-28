@@ -1,5 +1,26 @@
 # CHANGE.md
 
+## 2026-03-28
+
+### Documentation
+
+- Expanded `README.md` into a more npm-ready package overview with badges, features, requirements, supported environments, and subpath import guidance.
+- Added usage examples for `debounce`, `throttle`, `debouncedSignal`, `useDebounce`, `useThrottled`, and `useDebounceSignal`.
+- Updated README positioning to reflect the current public API, including React hook support and throttle support.
+
+### Security
+
+- Clarified CVE policy in `CVE_CHECKLIST.md` for production release gating and dev tooling tracking.
+- `pnpm run check:cve` is the production dependency release gate.
+- `pnpm run check:cve:full` is used to track dev tooling vulnerabilities.
+- Added `pnpm.overrides` in `package.json` to force patched transitive versions for `picomatch` and `brace-expansion`.
+- Refreshed lockfile resolution so audit checks use patched transitive versions.
+- Verified both `pnpm audit --audit-level moderate` and `pnpm audit --prod --audit-level moderate` pass.
+
+### CI
+
+- Updated GitHub Actions step labels and notes in `.github/workflows/ci.yml` to distinguish release-gate CVE checks from dev tooling vulnerability tracking.
+
 ## 2026-03-24
 
 ### Fixed
@@ -10,10 +31,10 @@
 
 ### Documentation
 
-- Rewrote `README.md` to match current public API:
-- `debouncedSignal` naming (replacing older `createDebouncedSignal` references).
-- Subpath imports (`/debounce`, `/debounceSignal`, `/throttle`, `/react`, `/types`).
-- Strict type-only guidance for `kk-debounce/types`.
+- Rewrote `README.md` to match the current public API.
+- Updated `debouncedSignal` naming to replace older `createDebouncedSignal` references.
+- Added subpath import guidance for `/debounce`, `/debounceSignal`, `/throttle`, `/react`, and `/types`.
+- Added strict type-only guidance for `kk-debounce/types`.
 - Added throttle behavior and React hook sections.
 
 ### Notes

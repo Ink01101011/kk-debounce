@@ -1,7 +1,7 @@
 {
   "name": "kk-debounce",
-  "version": "1.0.2",
-  "description": "The Next-Generation Debounce Library for 2026. Built for the modern web with native Temporal API support, AbortSignal integration, and Fine-grained Reactivity.",
+  "version": "1.0.3",
+  "description": "A lightweight, zero-dependency utility for debounce and throttle in JavaScript and TypeScript apps, with built-in React hooks for common UI workflows.",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",
@@ -70,9 +70,15 @@
     "LICENSE"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=18.18.0"
   },
   "packageManager": "pnpm@10.17.1",
+  "pnpm": {
+    "overrides": {
+      "picomatch@4": "^4.0.4",
+      "brace-expansion@5": "^5.0.5"
+    }
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -91,26 +97,28 @@
   },
   "keywords": [
     "debounce",
-    "temporal",
-    "abortsignal",
-    "reactive",
-    "signals",
-    "typescript"
+    "throttle",
+    "optimization",
+    "performance",
+    "utils",
+    "javascript-utility",
+    "kk-debounce",
+    "ink01101011"
   ],
   "license": "MIT",
   "devDependencies": {
-    "@eslint/js": "^9.35.0",
+    "@eslint/js": "^10.0.1",
     "@types/react": "^18.3.28",
-    "@vitest/coverage-v8": "^3.2.4",
-    "eslint": "^9.35.0",
+    "@vitest/coverage-v8": "^4.1.2",
+    "eslint": "^10.1.0",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "prettier": "^3.6.2",
     "react": "^18",
     "tsup": "^8.4.0",
     "typescript": "^5.8.0",
-    "typescript-eslint": "^8.44.1",
-    "vitest": "^3.0.0"
+    "typescript-eslint": "^8.57.2",
+    "vitest": "^4.1.2"
   },
   "peerDependencies": {
     "react": "^18.0.0"
