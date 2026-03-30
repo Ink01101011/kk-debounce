@@ -1,6 +1,6 @@
 {
   "name": "kk-debounce",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "A lightweight, zero-dependency utility for debounce and throttle in JavaScript and TypeScript apps, with built-in React hooks for common UI workflows.",
   "type": "module",
   "sideEffects": false,
