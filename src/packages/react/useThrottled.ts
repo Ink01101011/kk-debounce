@@ -26,9 +26,16 @@ export default function useThrottled<T extends AnyFunction>(
     cbRef.current = callback;
   }, [callback]);
 
+  const {
+    hours = 0,
+    minutes = 0,
+    seconds = 0,
+    ms = 0,
+  } = typeof wait === 'number' ? { ms: wait } : wait;
+
   const throttledFunction = React.useMemo(
     () => throttle((...args: Parameters<T>) => cbRef.current(...args), wait),
-    [wait]
+    [hours, minutes, seconds, ms]
   );
 
   React.useEffect(() => {

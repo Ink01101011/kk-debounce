@@ -1,5 +1,26 @@
 # CHANGE.md
 
+## 2026-03-30
+
+### Fixed
+
+- Fixed temporal object parameters (`{ hours, minutes, seconds, ms }`) causing unnecessary React hook recreation by destructuring wait values directly in dependency array instead of relying on object reference identity.
+- Fixed `useDebounce`, `useThrottled`, and `useDebounceSignal` to properly track temporal object changes without re-creating debounced/throttled functions on each render.
+
+### Changed
+
+- Updated React peer dependency to support both React 18 and React 19: `"react": "^18.0.0 || ^19.0.0"`.
+- Made React peer dependency optional via `peerDependenciesMeta` to allow non-React consumers to install the package without React dependency warnings.
+
+### Added
+
+- Added React 18 and React 19 compatibility matrix to GitHub Actions CI pipeline with separate type checking and test runs for each version.
+- Added clarification in `README.md` that React is optional unless importing from `kk-debounce/react`.
+
+### Maintenance
+
+- Updated `package.json` version to `1.0.6`.
+
 ## 2026-03-28
 
 ### Documentation
