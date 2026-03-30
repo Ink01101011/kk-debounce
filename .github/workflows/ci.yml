@@ -38,3 +38,37 @@ jobs:
       # Tracking only: dev tooling vulnerabilities are surfaced for maintenance follow-up.
       - name: Tracking CVE check (dev tools dependencies)
         run: pnpm run check:cve:full
+
+  react-compatibility:
+    name: React Compatibility (React ${{ matrix.react_version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - react_version: 18
+            react_types_version: 18
+          - react_version: 19
+            react_types_version: 19
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Switch React version for compatibility validation
+        run: pnpm add -D react@^${{ matrix.react_version }} @types/react@^${{ matrix.react_types_version }}
+
+      - name: Run React compatibility checks
+        run: pnpm run typecheck && pnpm run test

@@ -22,6 +22,8 @@ A **lightweight**, **zero-dependency** utility for **debounce** and **throttle**
 - Node.js 18+
 - React 18+ for `kk-debounce/react`
 
+React is optional unless you import from `kk-debounce/react`.
+
 ## 📦 Installation
 
 Install with your preferred package manager:
