@@ -27,9 +27,24 @@ function useDebounce<T extends AnyFunction>(
     cbRef.current = callback;
   }, [callback]);
 
+  const {
+    hours = 0,
+    minutes = 0,
+    seconds = 0,
+    ms = 0,
+  } = typeof wait === 'number' ? { ms: wait } : wait;
+
   const debouncedFn = React.useMemo(
     () => debounce((...args) => cbRef.current(...args), wait, options),
-    [wait, options?.autoAbort, options?.signal, options?.behavior]
+    [
+      hours,
+      minutes,
+      seconds,
+      ms,
+      options?.autoAbort,
+      options?.signal,
+      options?.behavior,
+    ]
   );
 
   React.useEffect(() => {

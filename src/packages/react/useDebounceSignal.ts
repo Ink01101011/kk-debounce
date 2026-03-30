@@ -32,6 +32,13 @@ function useDebounceSignal<T>(
     getterRef.current = getter;
   }, [setter, getter]);
 
+  const {
+    hours = 0,
+    minutes = 0,
+    seconds = 0,
+    ms = 0,
+  } = typeof wait === 'number' ? { ms: wait } : wait;
+
   const searchController = React.useMemo(
     () =>
       debouncedSignal(
@@ -40,7 +47,15 @@ function useDebounceSignal<T>(
         wait,
         options
       ),
-    [wait, options?.autoAbort, options?.signal, options?.behavior]
+    [
+      hours,
+      minutes,
+      seconds,
+      ms,
+      options?.autoAbort,
+      options?.signal,
+      options?.behavior,
+    ]
   );
 
   React.useEffect(() => {
