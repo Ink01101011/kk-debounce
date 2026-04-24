@@ -1,6 +1,6 @@
 {
   "name": "kk-debounce",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "A lightweight, zero-dependency utility for debounce and throttle in JavaScript and TypeScript apps, with built-in React hooks for common UI workflows.",
   "type": "module",
   "sideEffects": false,
@@ -87,6 +87,7 @@
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "check:cve": "pnpm audit --prod --audit-level moderate",

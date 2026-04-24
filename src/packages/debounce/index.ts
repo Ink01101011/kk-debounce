@@ -48,6 +48,10 @@ export function debounce<T extends AnyFunction>(
     controller = new AbortController();
 
     const internalSignal = controller.signal;
+    // AbortSignal.any() merges the external signal with the internal one so that either can
+    // cancel the pending call. It is available in all modern browsers since mid-2023 (Chrome 116,
+    // Firefox 118, Safari 17.4). In environments that lack it the external `signal` option is
+    // silently ignored — only autoAbort and .cancel() will cancel pending calls in those runtimes.
     const combinedSignal =
       signal && 'any' in AbortSignal
         ? AbortSignal.any([signal, internalSignal])
