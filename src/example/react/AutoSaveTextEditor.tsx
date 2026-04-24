@@ -8,13 +8,11 @@ export default function Editor() {
     console.log('Saving to Database...', text);
     // Simulate API Call
     await new Promise((res) => setTimeout(res, 1000));
-  }, 2000); // รอ 2 วินาทีหลังจากหยุดพิมพ์
+  }, 2000); // Wait 2 seconds after the user stops typing before saving
 
-  
-
-  // 🛡️ Safety Mechanism: ถ้า User จะปิดแท็บ ให้เซฟทันที!
+  // Flush or cancel the pending save when the user closes or navigates away from the tab.
   useEffect(() => {
-    const handleBeforeUnload = () => autoSave.cancel(); // หรือใช้ .flush() ถ้าต้องการเซฟก่อนปิด
+    const handleBeforeUnload = () => autoSave.cancel(); // use .flush() instead to save before closing
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
