@@ -4,11 +4,16 @@ const externalController = new AbortController();
 
 const debouncedFetch = debounce(
   async (query: string, signal: AbortSignal) => {
-    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
-      signal,
-    });
-    const result = await response.json();
-    console.log('result:', result);
+    try {
+      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
+        signal,
+      });
+      const result = await response.json();
+      console.log('result:', result);
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') return;
+      console.error('Fetch failed:', error);
+    }
   },
   { ms: 500 },
   {
