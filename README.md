@@ -29,7 +29,7 @@ A **lightweight**, **zero-dependency** debounce and throttle library for JavaScr
 - **Debounce** — delay execution until calls stop for a configured wait time
 - **Throttle** — cap how frequently a callback can run (scroll, resize, mouse events)
 - **Debounced Signal** — reactive state controller with `value`, `isPending`, `cancel()`, and `flush()`
-- **AbortSignal support** — cancel in-flight `fetch` / `axios` calls without extra boilerplate
+- **AbortSignal support** — cancel pending debounced calls without extra boilerplate
 - **React hooks** — `useDebounce`, `useDebounceSignal`, `useThrottled` with stable refs
 - **Temporal wait objects** — express delays as `{ minutes: 1, seconds: 30 }` instead of raw ms
 - **Dual format** — ships as ESM and CJS
