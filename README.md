@@ -90,9 +90,12 @@ import {
 import { debounce } from 'kk-debounce';
 
 const handleSearch = debounce(
-  async (query: string) => {
+  // withSignal appends the execution's AbortSignal as the last argument.
+  async (query: string, signal: AbortSignal) => {
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
+        signal,
+      });
       const data = await res.json();
       console.log('Results:', data);
     } catch (error) {
@@ -102,11 +105,11 @@ const handleSearch = debounce(
     }
   },
   500,
-  { autoAbort: true }
+  { autoAbort: true, withSignal: true }
 );
 
 handleSearch('Hello');
-handleSearch('Hello World'); // Previous call is aborted automatically.
+handleSearch('Hello World'); // Previous call is aborted, even if its request is in flight.
 ```
 
 > **Note on async callbacks:** Always wrap `fetch` (or any async operation) in a `try/catch` and
@@ -223,15 +226,21 @@ export function ProfileEditor() {
 
 ### `debounce(callback, wait, options?)`
 
-| Parameter           | Type                       | Default      | Description                                              |
-| ------------------- | -------------------------- | ------------ | -------------------------------------------------------- |
-| `callback`          | `Function`                 | —            | The function to debounce                                 |
-| `wait`              | `number \| TemporalObject` | —            | Delay in ms or `{ minutes?, seconds?, ms? }`             |
-| `options.behavior`  | `'trailing' \| 'leading'`  | `'trailing'` | When to invoke: after the wait or on the first call      |
-| `options.autoAbort` | `boolean`                  | `false`      | Abort the previous call's signal when a new call arrives |
-| `options.signal`    | `AbortSignal`              | —            | External signal to cancel all pending calls              |
+| Parameter            | Type                       | Default      | Description                                                     |
+| -------------------- | -------------------------- | ------------ | --------------------------------------------------------------- |
+| `callback`           | `Function`                 | —            | The function to debounce                                        |
+| `wait`               | `number \| TemporalObject` | —            | Delay in ms or `{ minutes?, seconds?, ms? }`                    |
+| `options.behavior`   | `'trailing' \| 'leading'`  | `'trailing'` | When to invoke: after the wait or on the first call             |
+| `options.autoAbort`  | `boolean`                  | `false`      | Abort the previous call's signal when a new call arrives        |
+| `options.signal`     | `AbortSignal`              | —            | External signal to cancel all pending calls                     |
+| `options.withSignal` | `boolean`                  | `false`      | Append the call's `AbortSignal` as the callback's last argument |
 
 Returns the debounced function with `.cancel()`.
+
+> **Aborting in-flight work:** `autoAbort` and `.cancel()` abort the signal of the latest execution
+> until the promise returned by the callback settles. The callback only sees that signal when
+> `withSignal: true` is set; pass it to `fetch` (or other signal-aware APIs) to cancel the request.
+> Callers of the debounced function never pass the signal — its type omits the trailing parameter.
 
 > **Browser compatibility — `AbortSignal.any()`:** When an external `signal` is provided, kk-debounce
 > uses `AbortSignal.any()` to merge it with the internal abort controller so that either can cancel
