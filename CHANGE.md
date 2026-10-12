@@ -1,5 +1,19 @@
 # CHANGE.md
 
+## 2026-10-12
+
+### Fixed
+
+- Fixed `autoAbort` not aborting in-flight async work (#28). The execution's controller now stays live until the promise returned by the callback settles, so a newer call (with `autoAbort`) or `.cancel()` aborts it. Previously the controller was cleared as soon as the callback started, so `autoAbort` only cancelled a pending timer.
+
+### Added
+
+- Added the `withSignal` option to `debounce`. When `true`, the execution's `AbortSignal` (merged with the external `signal`) is appended as the callback's last argument, and the returned function's type omits that parameter. It is opt-in, so existing callback signatures are unchanged.
+
+### Documentation
+
+- Updated the README async example to pass the signal to `fetch` with `withSignal: true`, and documented `withSignal` in the API reference.
+
 ## 2026-03-30
 
 ### Fixed
