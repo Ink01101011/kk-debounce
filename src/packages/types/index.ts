@@ -24,11 +24,21 @@ export type DebounceOptionsBehavior = 'leading' | 'trailing';
  */
 export interface DebounceOptions {
   /**
-   * If true, aborts the previous execution's signal immediately when a new call is made.
-   * Ideal for preventing "race conditions" in async tasks like API fetching.
+   * If true, aborts the previous execution's signal immediately when a new call is made,
+   * including an execution whose returned promise has not settled yet.
+   * Combine with `withSignal: true` so the callback can pass the signal to `fetch` or other
+   * signal-aware work; ideal for preventing "race conditions" in async tasks like API fetching.
    * @default false
    */
   autoAbort?: boolean;
+
+  /**
+   * If true, the execution's `AbortSignal` is appended as the last argument of the callback.
+   * The signal is aborted by `autoAbort`, `.cancel()`, or the external `signal`, and stays live
+   * until the callback's returned promise settles.
+   * @default false
+   */
+  withSignal?: boolean;
 
   /**
    * An external AbortSignal to be linked with the internal debounce lifecycle.
@@ -42,6 +52,18 @@ export interface DebounceOptions {
    */
   behavior?: DebounceOptionsBehavior;
 }
+
+/**
+ * Strips a trailing `AbortSignal` parameter from a function type, so a callback written for
+ * `withSignal: true` is exposed to callers without it.
+ */
+export type WithoutSignal<T extends AnyFunction> = T extends (
+  ...args: [...infer A, AbortSignal]
+) => infer R
+  ? (...args: A) => R
+  : T extends (...args: [...infer A, (AbortSignal | undefined)?]) => infer R
+    ? (...args: A) => R
+    : T;
 
 /**
  * The interface for a function wrapped with debounce logic.
