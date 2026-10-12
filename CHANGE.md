@@ -14,6 +14,11 @@
 
 - Updated the README async example to pass the signal to `fetch` with `withSignal: true`, and documented `withSignal` in the API reference.
 
+### Maintenance
+
+- Updated dev dependencies within their existing ranges (vite, vitest, eslint, tsup and their transitive packages) to clear `pnpm audit` advisories, and raised the `vite` override to `^7.3.7` to match.
+- Updated `package.json` version to `1.1.0` (minor: `withSignal` is new API).
+
 ## 2026-03-30
 
 ### Fixed
