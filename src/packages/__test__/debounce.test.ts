@@ -132,4 +132,128 @@ describe('debounce', () => {
       });
     }
   });
+  describe('withSignal (issue #28)', () => {
+    it('passes the AbortSignal as the last argument when withSignal is true', () => {
+      const fn = vi.fn();
+      const debounced = debounce(fn, 100, { withSignal: true });
+
+      debounced('payload');
+      vi.advanceTimersByTime(100);
+
+      expect(fn).toHaveBeenCalledTimes(1);
+      expect(fn.mock.calls[0][0]).toBe('payload');
+      expect(fn.mock.calls[0][1]).toBeInstanceOf(AbortSignal);
+    });
+
+    it('does not append a signal when withSignal is not set', () => {
+      const fn = vi.fn();
+      const debounced = debounce(fn, 100, { autoAbort: true });
+
+      debounced('payload');
+      vi.advanceTimersByTime(100);
+
+      expect(fn).toHaveBeenCalledWith('payload');
+      expect(fn.mock.calls[0]).toHaveLength(1);
+    });
+
+    it('aborts the in-flight execution signal when a newer call arrives with autoAbort', async () => {
+      const signals: AbortSignal[] = [];
+      const debounced = debounce(
+        (_q: string, signal: AbortSignal) => {
+          signals.push(signal);
+          return new Promise<void>((resolve) => setTimeout(resolve, 100));
+        },
+        20,
+        { autoAbort: true, withSignal: true }
+      );
+
+      debounced('a');
+      await vi.advanceTimersByTimeAsync(40); // 'a' fired, still in flight
+      expect(signals).toHaveLength(1);
+      expect(signals[0].aborted).toBe(false);
+
+      debounced('ab');
+      expect(signals[0].aborted).toBe(true);
+
+      await vi.advanceTimersByTimeAsync(40);
+      expect(signals).toHaveLength(2);
+      expect(signals[1].aborted).toBe(false);
+    });
+
+    it('aborts the in-flight execution signal on cancel()', async () => {
+      let seen: AbortSignal | undefined;
+      const debounced = debounce(
+        (signal: AbortSignal) => {
+          seen = signal;
+          return new Promise<void>((resolve) => setTimeout(resolve, 100));
+        },
+        20,
+        { withSignal: true }
+      );
+
+      debounced();
+      await vi.advanceTimersByTimeAsync(40);
+      expect(seen?.aborted).toBe(false);
+
+      debounced.cancel();
+      expect(seen?.aborted).toBe(true);
+    });
+
+    it('does not abort a settled execution on the next call', async () => {
+      const signals: AbortSignal[] = [];
+      const debounced = debounce(
+        (_q: string, signal: AbortSignal) => {
+          signals.push(signal);
+          return Promise.resolve();
+        },
+        20,
+        { autoAbort: true, withSignal: true }
+      );
+
+      debounced('a');
+      await vi.advanceTimersByTimeAsync(40);
+      debounced('ab');
+
+      expect(signals[0].aborted).toBe(false);
+    });
+
+    it('aborts the in-flight leading execution when a call arrives after the window', async () => {
+      const signals: AbortSignal[] = [];
+      const debounced = debounce(
+        (_q: string, signal: AbortSignal) => {
+          signals.push(signal);
+          return new Promise<void>((resolve) => setTimeout(resolve, 500));
+        },
+        20,
+        { behavior: 'leading', autoAbort: true, withSignal: true }
+      );
+
+      debounced('a');
+      await vi.advanceTimersByTimeAsync(40); // window closed, 'a' still in flight
+      debounced('b');
+
+      expect(signals).toHaveLength(2);
+      expect(signals[0].aborted).toBe(true);
+      expect(signals[1].aborted).toBe(false);
+    });
+
+    it('exposes the external signal to the callback', async () => {
+      let seen: AbortSignal | undefined;
+      const external = new AbortController();
+      const debounced = debounce(
+        (signal: AbortSignal) => {
+          seen = signal;
+          return new Promise<void>((resolve) => setTimeout(resolve, 100));
+        },
+        20,
+        { signal: external.signal, withSignal: true }
+      );
+
+      debounced();
+      await vi.advanceTimersByTimeAsync(40);
+      external.abort('external cancel');
+
+      expect(seen?.aborted).toBe(true);
+    });
+  });
 });

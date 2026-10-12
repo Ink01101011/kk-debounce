@@ -4,7 +4,11 @@ import type {
   DebouncedFunction,
   DebounceOptions,
   DebounceTemporalObjectType,
+  WithoutSignal,
 } from '../types';
+
+const isPromiseLike = (value: unknown): value is PromiseLike<unknown> =>
+  typeof (value as PromiseLike<unknown> | null)?.then === 'function';
 
 /**
  * Creates a debounced version of the provided function that delays execution
@@ -18,16 +22,42 @@ import type {
  * * @example
  * const log = debounce((msg: string) => console.log(msg), { seconds: 2 });
  * log("Hello"); // Will print "Hello" after 2 seconds of inactivity.
+ *
+ * @example
+ * // withSignal appends the execution's AbortSignal; autoAbort cancels the in-flight request.
+ * const search = debounce(
+ *   (q: string, signal: AbortSignal) => fetch(`/api?q=${q}`, { signal }),
+ *   300,
+ *   { autoAbort: true, withSignal: true }
+ * );
+ * search("hello"); // callers never pass the signal
  */
+export function debounce<T extends AnyFunction>(
+  func: T,
+  wait: number | DebounceTemporalObjectType,
+  options: DebounceOptions & { withSignal: true }
+): DebouncedFunction<WithoutSignal<T>>;
+export function debounce<T extends AnyFunction>(
+  func: T,
+  wait: number | DebounceTemporalObjectType,
+  options?: DebounceOptions
+): DebouncedFunction<T>;
 export function debounce<T extends AnyFunction>(
   func: T,
   wait: number | DebounceTemporalObjectType,
   options: DebounceOptions = {}
 ): DebouncedFunction<T> {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  // Controller of the most recent call. It stays set while that call's execution is in flight
+  // (its returned promise has not settled), so autoAbort and .cancel() can still abort it.
   let controller: AbortController | null = null;
 
-  const { behavior = 'trailing', autoAbort = false, signal } = options;
+  const {
+    behavior = 'trailing',
+    autoAbort = false,
+    withSignal = false,
+    signal,
+  } = options;
   const delay = typeof wait === 'number' ? wait : convertTemporalToMs(wait);
 
   const debouncedFunction = function (
@@ -45,9 +75,10 @@ export function debounce<T extends AnyFunction>(
       clearTimeout(timeoutId);
     }
 
-    controller = new AbortController();
+    const callController = new AbortController();
+    controller = callController;
 
-    const internalSignal = controller.signal;
+    const internalSignal = callController.signal;
     // AbortSignal.any() merges the external signal with the internal one so that either can
     // cancel the pending call. It is available in all modern browsers since mid-2023 (Chrome 116,
     // Firefox 118, Safari 17.4). In environments that lack it the external `signal` option is
@@ -57,23 +88,51 @@ export function debounce<T extends AnyFunction>(
         ? AbortSignal.any([signal, internalSignal])
         : internalSignal;
 
+    let inFlight = false;
+    const release = () => {
+      if (controller === callController) controller = null;
+    };
+
+    const invoke = () => {
+      const result = func.apply(
+        this,
+        withSignal ? [...args, combinedSignal] : args
+      );
+
+      if (isPromiseLike(result)) {
+        inFlight = true;
+        // Re-throw so a rejection the caller does not handle is still reported as unhandled.
+        result.then(
+          () => {
+            inFlight = false;
+            release();
+          },
+          (error: unknown) => {
+            inFlight = false;
+            release();
+            throw error;
+          }
+        );
+      }
+    };
+
     if (canInvokeNow) {
-      func.apply(this, args);
+      invoke();
     }
 
     timeoutId = setTimeout(() => {
+      timeoutId = null;
+
       if (combinedSignal.aborted) {
-        controller = null;
-        timeoutId = null;
+        release();
         return;
       }
 
       if (!isLeading) {
-        func.apply(this, args);
+        invoke();
       }
 
-      timeoutId = null;
-      controller = null;
+      if (!inFlight) release();
     }, delay);
   };
 
