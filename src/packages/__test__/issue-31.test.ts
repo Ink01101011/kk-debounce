@@ -415,3 +415,40 @@ describe('issue #31: utils', () => {
     }
   });
 });
+
+describe('issue #31: debouncedSignal external signal listener', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('attaches a listener only while an update is pending', () => {
+    const external = new AbortController();
+    const add = vi.spyOn(external.signal, 'addEventListener');
+    const remove = vi.spyOn(external.signal, 'removeEventListener');
+
+    const s = debouncedSignal(
+      () => 0,
+      () => {},
+      20,
+      { signal: external.signal }
+    );
+    expect(add).not.toHaveBeenCalled();
+
+    s(1);
+    s(2);
+    vi.advanceTimersByTime(20);
+    s(3);
+    s.cancel();
+    s(4);
+    s.flush();
+
+    const own = (spy: typeof add) =>
+      spy.mock.calls.filter(([, l]) => l !== undefined).length;
+    expect(own(add)).toBe(own(remove));
+  });
+});

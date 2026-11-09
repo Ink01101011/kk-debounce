@@ -34,35 +34,37 @@ export function debouncedSignal<T>(
   let _isPending = false;
   let _pendingValue: T = getter();
   const isLeading = options.behavior === 'leading';
+  const { signal } = options;
+
+  // The external signal drops the scheduled update. Its listener is attached only while an update
+  // is pending, so a long-lived signal does not retain idle controllers (e.g. from React re-renders).
+  const onExternalAbort = () => setPending(false);
+  const setPending = (pending: boolean) => {
+    if (pending === _isPending) return;
+    _isPending = pending;
+    if (pending) signal?.addEventListener('abort', onExternalAbort);
+    else signal?.removeEventListener('abort', onExternalAbort);
+  };
 
   const runUpdate = debounce(
     (newVal: T) => {
-      _isPending = false;
+      setPending(false);
       setter(newVal);
     },
     wait,
     options
   );
 
-  // The external signal drops the scheduled update, so it is no longer pending.
-  options.signal?.addEventListener(
-    'abort',
-    () => {
-      _isPending = false;
-    },
-    { once: true }
-  );
-
   const debouncedSignal = function (nextValue: T) {
-    if (options.signal?.aborted) return;
+    if (signal?.aborted) return;
     _pendingValue = nextValue;
-    _isPending = true;
+    setPending(true);
     try {
       runUpdate(nextValue);
     } finally {
       // Leading mode either applies the value synchronously or drops it inside the window;
       // either way nothing is left scheduled.
-      if (isLeading) _isPending = false;
+      if (isLeading) setPending(false);
     }
   } as DebouncedSignal<T>;
 
@@ -72,7 +74,7 @@ export function debouncedSignal<T>(
     cancel: {
       value: () => {
         runUpdate.cancel();
-        _isPending = false;
+        setPending(false);
       },
     },
     flush: {
