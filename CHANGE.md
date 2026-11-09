@@ -1,6 +1,6 @@
 # CHANGE.md
 
-## 2026-11-09
+## 2026-11-09 — 1.1.1
 
 ### Fixed (#31)
 
@@ -8,6 +8,7 @@
 - `throttle` no longer locks up for good when a queued (trailing) call throws, and a throwing first call still opens the window.
 - `debounce` with `behavior: 'leading'` schedules its window before invoking, so a synchronous throw no longer disables debouncing; a call inside the window with `autoAbort` no longer aborts the running execution; `.cancel()` still aborts it after calls inside the window; and an already-aborted external `signal` prevents the call.
 - `debouncedSignal` no longer leaves `isPending` stuck at `true` in leading mode, when the external `signal` aborts, or when the setter throws (including during `flush()`).
+- `debouncedSignal` attaches its external `signal` listener only while an update is pending, so a long-lived signal no longer retains every controller created for it (for example by `useDebounceSignal` re-renders).
 - React: `useDebounce` and `useDebounceSignal` now recreate when `withSignal` changes, and `useDebounce(..., { withSignal: true })` omits the signal parameter from its returned type.
 
 ### Changed
@@ -15,8 +16,17 @@
 - The external `signal` is now honoured with one listener, attached only while a call is pending or in flight, instead of building an `AbortSignal.any()` composite on every call. Calls with an external signal are about 12x faster (~2,100 to ~170 ns per call) and no longer retain memory (1M calls previously grew the heap by ~1.1 GB). It also works in runtimes without `AbortSignal.any()`, where the option used to be ignored.
 - `wait` is validated: values outside 0 – 2,147,483,647 ms (negative, `NaN`, `Infinity`, or more than ~24.8 days) throw a `RangeError` and a non-number temporal unit throws a `TypeError`, instead of silently firing after ~1 ms. Temporal objects only read their own properties.
 
+### Upgrade notes
+
+Released as a patch because these only affect inputs or patterns that did not work correctly before, but check them when upgrading:
+
+- An unusable `wait` now throws at creation (inside React hooks that means during render) instead of firing after ~1 ms.
+- `signal.reason` from `autoAbort` and `.cancel()` is now a `DOMException` named `AbortError`, not the strings `'Debounced: New call initiated'` / `'Debounced: Manually cancelled'`; code comparing against those strings must check `reason.name === 'AbortError'` instead.
+- In leading mode and in `throttle`, a callback that throws synchronously still opens its window, so the next call inside the window does not run it again.
+
 ### Maintenance
 
+- Updated `package.json` version to `1.1.1`.
 - Updated `vitest` and `@vitest/coverage-v8` to 4.1.12 and `eslint` to 10.14.0, and added `pnpm` overrides for `esbuild` (via tsup) and `minimatch` (via eslint) to clear GHSA-qxg6-89mg-rqv8, GHSA-xp26-3454-mjgp, GHSA-g3hv-75wg-m249 and GHSA-g7r4-m6w7-qqqr; `pnpm audit` reports no advisories.
 - CI: runs on Ubuntu, macOS and Windows with Node 22 and 24 (Node 20 is end-of-life), declares `permissions: contents: read`, and pins actions to commit SHAs. Added `.gitattributes` to keep LF line endings on Windows checkouts.
 
