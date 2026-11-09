@@ -77,7 +77,9 @@
     "overrides": {
       "picomatch@4": "^4.0.4",
       "brace-expansion@5": "^5.0.5",
-      "vite": "^7.3.7"
+      "vite": "^7.3.7",
+      "esbuild@0.27": "^0.28.1",
+      "minimatch@10": "^11.0.1"
     }
   },
   "scripts": {
@@ -111,8 +113,8 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/react": "^18.3.31",
-    "@vitest/coverage-v8": "^4.1.11",
-    "eslint": "^10.12.0",
+    "@vitest/coverage-v8": "^4.1.12",
+    "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "prettier": "^3.9.10",
@@ -121,7 +123,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.71.1",
     "vite": "^7.3.7",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"

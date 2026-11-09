@@ -15,13 +15,13 @@ import type {
  * @param {number | DebounceTemporalObjectType} wait - The delay duration.
  * @param {DebounceOptions} [options] - Optional configurations.
  * @returns {DebouncedSignal<T>} A control object with .isPending and .value properties.
- * * @example
+ * @example
  * const search = debouncedSignal(
- * () => state.query,
- * (v) => (state.query = v),
- * { ms: 500 }
+ *   () => state.query,
+ *   (v) => (state.query = v),
+ *   { ms: 500 }
  * );
- * * // Usage in UI:
+ * // Usage in UI:
  * search("new query");
  * console.log(search.isPending); // true
  */
@@ -33,20 +33,37 @@ export function debouncedSignal<T>(
 ): DebouncedSignal<T> {
   let _isPending = false;
   let _pendingValue: T = getter();
+  const isLeading = options.behavior === 'leading';
 
   const runUpdate = debounce(
     (newVal: T) => {
-      setter(newVal);
       _isPending = false;
+      setter(newVal);
     },
     wait,
     options
   );
 
+  // The external signal drops the scheduled update, so it is no longer pending.
+  options.signal?.addEventListener(
+    'abort',
+    () => {
+      _isPending = false;
+    },
+    { once: true }
+  );
+
   const debouncedSignal = function (nextValue: T) {
+    if (options.signal?.aborted) return;
     _pendingValue = nextValue;
     _isPending = true;
-    runUpdate(nextValue);
+    try {
+      runUpdate(nextValue);
+    } finally {
+      // Leading mode either applies the value synchronously or drops it inside the window;
+      // either way nothing is left scheduled.
+      if (isLeading) _isPending = false;
+    }
   } as DebouncedSignal<T>;
 
   Object.defineProperties(debouncedSignal, {
@@ -61,8 +78,9 @@ export function debouncedSignal<T>(
     flush: {
       value: () => {
         if (_isPending) {
-          setter(_pendingValue);
+          const value = _pendingValue;
           debouncedSignal.cancel();
+          setter(value);
         }
       },
     },

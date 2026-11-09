@@ -1,4 +1,4 @@
-import { convertTemporalToMs } from '../../utils';
+import { resolveDelay } from '../../utils';
 import {
   AnyFunction,
   ThrottledFunction,
@@ -14,6 +14,7 @@ import {
  * @param {T} callback - The function to throttle.
  * @param {number | ThrottleTemporalObjectType} wait - Delay in milliseconds or temporal object.
  * @returns {ThrottledFunction<T>} The throttled function.
+ * @throws {RangeError} If `wait` resolves to a negative, non-finite or over-2^31-1 ms delay.
  */
 export function throttle<T extends AnyFunction>(
   callback: T,
@@ -22,7 +23,20 @@ export function throttle<T extends AnyFunction>(
   let timer: ReturnType<typeof setTimeout> | null = null;
   let pendingCall: (() => void) | null = null;
 
-  const waitMs = typeof wait === 'number' ? wait : convertTemporalToMs(wait);
+  const waitMs = resolveDelay(wait);
+
+  // Each window is scheduled before the callback runs, so a callback that throws cannot leave
+  // a stale timer behind and lock the throttle.
+  const timeoutHandler = () => {
+    if (pendingCall) {
+      const call = pendingCall;
+      pendingCall = null;
+      timer = setTimeout(timeoutHandler, waitMs);
+      call();
+    } else {
+      timer = null;
+    }
+  };
 
   const throttledFunction = function (
     this: ThisParameterType<T>,
@@ -33,20 +47,8 @@ export function throttle<T extends AnyFunction>(
       return;
     }
 
-    callback.apply(this, args);
-
-    const timeoutHandler = () => {
-      if (pendingCall) {
-        const call = pendingCall;
-        pendingCall = null;
-        call();
-        timer = setTimeout(timeoutHandler, waitMs);
-      } else {
-        timer = null;
-      }
-    };
-
     timer = setTimeout(timeoutHandler, waitMs);
+    callback.apply(this, args);
   };
 
   throttledFunction.cancel = () => {

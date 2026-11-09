@@ -219,6 +219,33 @@ describe('react hooks internals', () => {
     cleanups.forEach((cleanup) => cleanup());
   });
 
+  it('useDebounce and useDebounceSignal recreate when withSignal changes (issue #31)', async () => {
+    const memoDeps: unknown[][] = [];
+
+    vi.doMock('react', () => ({
+      default: {
+        useRef: <T>(value: T) => ({ current: value }),
+        useEffect: () => {},
+        useMemo: <T>(factory: () => T, deps: unknown[]) => {
+          memoDeps.push(deps);
+          return factory();
+        },
+      },
+    }));
+
+    const { default: useDebounce } = await import('../react/useDebounce');
+    const { default: useDebounceSignal } =
+      await import('../react/useDebounceSignal');
+
+    useDebounce(vi.fn(), 120, { withSignal: false });
+    useDebounce(vi.fn(), 120, { withSignal: true });
+    useDebounceSignal(() => 0, vi.fn(), 120, { withSignal: false });
+    useDebounceSignal(() => 0, vi.fn(), 120, { withSignal: true });
+
+    expect(memoDeps[0]).not.toEqual(memoDeps[1]);
+    expect(memoDeps[2]).not.toEqual(memoDeps[3]);
+  });
+
   it('useDebounceSignal recreates controller when behavior changes', async () => {
     const cleanups: Array<() => void> = [];
     let memoDeps: unknown[] | undefined;

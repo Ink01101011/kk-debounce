@@ -112,9 +112,10 @@ handleSearch('Hello');
 handleSearch('Hello World'); // Previous call is aborted, even if its request is in flight.
 ```
 
-> **Note on async callbacks:** Always wrap `fetch` (or any async operation) in a `try/catch` and
-> check for `AbortError` when using `autoAbort: true` or an external `signal`. Unhandled rejections
-> from aborted requests will surface as uncaught errors in the console.
+> **Note on async callbacks:** kk-debounce aborts with a standard `AbortError` (`DOMException`), so
+> `error.name === AbortError` identifies an aborted request. With `withSignal: true`, a promise the
+> callback returns that rejects with that abort reason is not reported as an unhandled rejection; any
+> other rejection still is, so keep a `try/catch` around your own error handling.
 
 ### throttle
 
@@ -242,11 +243,13 @@ Returns the debounced function with `.cancel()`.
 > `withSignal: true` is set; pass it to `fetch` (or other signal-aware APIs) to cancel the request.
 > Callers of the debounced function never pass the signal — its type omits the trailing parameter.
 
-> **Browser compatibility — `AbortSignal.any()`:** When an external `signal` is provided, kk-debounce
-> uses `AbortSignal.any()` to merge it with the internal abort controller so that either can cancel
-> the pending call. `AbortSignal.any()` is available in all modern browsers since mid-2023 (Chrome 116,
-> Firefox 118, Safari 17.4). In environments that lack it the external `signal` option is silently
-> ignored — only `autoAbort` and `.cancel()` will cancel pending calls in those runtimes.
+> **External `signal`:** aborting it cancels the pending call and aborts every in-flight execution
+> with the signal's reason; later calls are ignored. kk-debounce attaches one listener only while a
+> call is pending or in flight, so a long-lived signal does not accumulate listeners. It works in every
+> runtime that has `AbortController` (no `AbortSignal.any()` needed).
+
+> **`behavior: 'leading'` with `autoAbort`:** a call inside the window runs nothing, so it does not
+> abort the execution that is still running. The next call that starts a new execution does.
 
 ### `throttle(callback, wait)`
 
@@ -255,7 +258,7 @@ Returns the debounced function with `.cancel()`.
 | `callback` | `Function`                 | The function to throttle            |
 | `wait`     | `number \| TemporalObject` | Minimum interval between executions |
 
-Returns the throttled function with `.cancel()`.
+Returns the throttled function with `.cancel()`. A callback that throws does not stop the throttle.
 
 ### `debouncedSignal(getter, setter, wait, options?)`
 
@@ -282,6 +285,10 @@ Instead of raw milliseconds, pass a temporal object:
 debounce(fn, { minutes: 1, seconds: 30 }); // 90 000 ms
 debounce(fn, { ms: 500 }); //    500 ms
 ```
+
+`wait` must resolve to 0 – 2,147,483,647 ms (about 24.8 days), the range `setTimeout` honours.
+Negative, `NaN`, `Infinity` or larger values throw a `RangeError`, and a non-number unit throws a
+`TypeError`, instead of silently firing after ~1 ms. Only own properties of the object are read.
 
 ## Bundle Size
 
