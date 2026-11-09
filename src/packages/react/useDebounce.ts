@@ -5,6 +5,7 @@ import {
   AnyFunction,
   DebounceOptions,
   DebounceTemporalObjectType,
+  WithoutSignal,
 } from '../types';
 
 /**
@@ -14,8 +15,19 @@ import {
  * @param {T} callback - Function to debounce.
  * @param {number | DebounceTemporalObjectType} wait - Delay in milliseconds or temporal object.
  * @param {DebounceOptions} [options] - Debounce behavior options.
- * @returns {DebouncedFunction<T>} Debounced function with `.cancel()`.
+ * @returns {DebouncedFunction<T>} Debounced function with `.cancel()`. With `withSignal: true`
+ * the trailing `AbortSignal` parameter is omitted from its type.
  */
+function useDebounce<T extends AnyFunction>(
+  callback: T,
+  wait: number | DebounceTemporalObjectType,
+  options: DebounceOptions & { withSignal: true }
+): DebouncedFunction<WithoutSignal<T>>;
+function useDebounce<T extends AnyFunction>(
+  callback: T,
+  wait: number | DebounceTemporalObjectType,
+  options?: DebounceOptions
+): DebouncedFunction<T>;
 function useDebounce<T extends AnyFunction>(
   callback: T,
   wait: number | DebounceTemporalObjectType,
@@ -42,6 +54,7 @@ function useDebounce<T extends AnyFunction>(
       seconds,
       ms,
       options?.autoAbort,
+      options?.withSignal,
       options?.signal,
       options?.behavior,
     ]

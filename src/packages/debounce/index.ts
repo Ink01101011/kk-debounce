@@ -1,4 +1,4 @@
-import { convertTemporalToMs } from '../../utils';
+import { createAbortError, resolveDelay } from '../../utils';
 import type {
   AnyFunction,
   DebouncedFunction,
@@ -19,7 +19,8 @@ const isPromiseLike = (value: unknown): value is PromiseLike<unknown> =>
  * @param {number | DebounceTemporalObjectType} wait - The delay duration (ms or Temporal object).
  * @param {DebounceOptions} [options={}] - Optional configuration for AbortSignal and Auto-abort.
  * @returns {DebouncedFunction<T>} A new debounced function with a .cancel() method.
- * * @example
+ * @throws {RangeError} If `wait` resolves to a negative, non-finite or over-2^31-1 ms delay.
+ * @example
  * const log = debounce((msg: string) => console.log(msg), { seconds: 2 });
  * log("Hello"); // Will print "Hello" after 2 seconds of inactivity.
  *
@@ -47,100 +48,124 @@ export function debounce<T extends AnyFunction>(
   wait: number | DebounceTemporalObjectType,
   options: DebounceOptions = {}
 ): DebouncedFunction<T> {
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
-  // Controller of the most recent call. It stays set while that call's execution is in flight
-  // (its returned promise has not settled), so autoAbort and .cancel() can still abort it.
-  let controller: AbortController | null = null;
-
   const {
     behavior = 'trailing',
     autoAbort = false,
     withSignal = false,
     signal,
   } = options;
-  const delay = typeof wait === 'number' ? wait : convertTemporalToMs(wait);
+  const delay = resolveDelay(wait);
+  const isLeading = behavior === 'leading';
+
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  // Controllers of executions whose returned promise has not settled yet. Only created with
+  // `withSignal`, since nothing else can observe the signal.
+  const inFlight = new Set<AbortController>();
+  // The external signal gets one listener, attached only while a call is pending or in flight,
+  // so a long-lived signal does not accumulate listeners or retain idle debounced functions.
+  let listening = false;
+
+  const clearTimer = () => {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+  };
+
+  // `reason` is a factory so the AbortError (and its stack trace) is only built when needed.
+  const abortInFlight = (reason: () => unknown) => {
+    if (inFlight.size === 0) return;
+    const controllers = [...inFlight];
+    inFlight.clear();
+    const abortReason = reason();
+    controllers.forEach((controller) => controller.abort(abortReason));
+  };
+
+  const onExternalAbort = () => {
+    clearTimer();
+    abortInFlight(() => signal?.reason);
+    syncListener();
+  };
+
+  const syncListener = () => {
+    if (!signal) return;
+    const busy = timeoutId !== null || inFlight.size > 0;
+    if (busy && !listening) {
+      signal.addEventListener('abort', onExternalAbort);
+      listening = true;
+    } else if (!busy && listening) {
+      signal.removeEventListener('abort', onExternalAbort);
+      listening = false;
+    }
+  };
+
+  const execute = (thisArg: ThisParameterType<T>, args: Parameters<T>) => {
+    const controller = withSignal ? new AbortController() : null;
+    if (controller) inFlight.add(controller);
+
+    const release = () => {
+      if (controller && inFlight.delete(controller)) syncListener();
+    };
+
+    let result: unknown;
+    try {
+      result = func.apply(
+        thisArg,
+        controller ? [...args, controller.signal] : args
+      );
+    } catch (error) {
+      release();
+      throw error;
+    }
+
+    if (controller && isPromiseLike(result)) {
+      result.then(release, (error: unknown) => {
+        release();
+        // A rejection caused by our own abort is expected, not a failure.
+        if (controller.signal.aborted && error === controller.signal.reason) {
+          return;
+        }
+        // Re-throw so a rejection the caller does not handle is still reported as unhandled.
+        throw error;
+      });
+    } else {
+      release();
+    }
+  };
 
   const debouncedFunction = function (
     this: ThisParameterType<T>,
     ...args: Parameters<T>
   ): void {
-    if (autoAbort && controller) {
-      controller.abort('Debounced: New call initiated');
+    if (signal?.aborted) return;
+
+    const invokeNow = isLeading && timeoutId === null;
+
+    // Only a call that will start an execution replaces the running one; in leading mode a call
+    // inside the window runs nothing, so it must not abort the execution that is still running.
+    if (autoAbort && (!isLeading || invokeNow)) {
+      abortInFlight(() => createAbortError('Debounced: New call initiated'));
     }
 
-    const isLeading = behavior === 'leading';
-    const canInvokeNow = isLeading && !timeoutId;
-
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-
-    const callController = new AbortController();
-    controller = callController;
-
-    const internalSignal = callController.signal;
-    // AbortSignal.any() merges the external signal with the internal one so that either can
-    // cancel the pending call. It is available in all modern browsers since mid-2023 (Chrome 116,
-    // Firefox 118, Safari 17.4). In environments that lack it the external `signal` option is
-    // silently ignored — only autoAbort and .cancel() will cancel pending calls in those runtimes.
-    const combinedSignal =
-      signal && 'any' in AbortSignal
-        ? AbortSignal.any([signal, internalSignal])
-        : internalSignal;
-
-    let inFlight = false;
-    const release = () => {
-      if (controller === callController) controller = null;
-    };
-
-    const invoke = () => {
-      const result = func.apply(
-        this,
-        withSignal ? [...args, combinedSignal] : args
-      );
-
-      if (isPromiseLike(result)) {
-        inFlight = true;
-        // Re-throw so a rejection the caller does not handle is still reported as unhandled.
-        result.then(
-          () => {
-            inFlight = false;
-            release();
-          },
-          (error: unknown) => {
-            inFlight = false;
-            release();
-            throw error;
-          }
-        );
-      }
-    };
-
-    if (canInvokeNow) {
-      invoke();
-    }
-
+    clearTimer();
+    // The window is scheduled before invoking, so a callback that throws still opens it.
     timeoutId = setTimeout(() => {
       timeoutId = null;
-
-      if (combinedSignal.aborted) {
-        release();
-        return;
+      try {
+        if (!isLeading) execute(this, args);
+      } finally {
+        syncListener();
       }
-
-      if (!isLeading) {
-        invoke();
-      }
-
-      if (!inFlight) release();
     }, delay);
+    syncListener();
+
+    if (invokeNow) execute(this, args);
   };
 
   debouncedFunction.cancel = () => {
-    if (timeoutId) clearTimeout(timeoutId);
-    if (controller) controller.abort('Debounced: Manually cancelled');
-    timeoutId = null;
-    controller = null;
+    clearTimer();
+    abortInFlight(() => createAbortError('Debounced: Manually cancelled'));
+    syncListener();
   };
 
   return debouncedFunction;

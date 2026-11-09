@@ -53,6 +53,7 @@ function useDebounceSignal<T>(
       seconds,
       ms,
       options?.autoAbort,
+      options?.withSignal,
       options?.signal,
       options?.behavior,
     ]
